@@ -72,12 +72,28 @@ export const transformBookToDB = (book: unknown, userId: string): DBBook => {
     tags,
     progress,
     readingStatus,
+    wordCount,
+    vocabularyCount,
+    readingTimeMs,
     metadata,
     createdAt,
     updatedAt,
     deletedAt,
     uploadedAt,
   } = book as Book;
+
+  const normalizedMetadata =
+    metadata && typeof metadata === 'object'
+      ? {
+          ...metadata,
+          readingStats: {
+            ...((metadata.readingStats as Record<string, unknown>) || {}),
+            ...(typeof wordCount === 'number' ? { wordCount } : {}),
+            ...(typeof vocabularyCount === 'number' ? { vocabularyCount } : {}),
+            ...(typeof readingTimeMs === 'number' ? { readingTimeMs } : {}),
+          },
+        }
+      : metadata;
 
   return {
     user_id: userId,
@@ -92,7 +108,7 @@ export const transformBookToDB = (book: unknown, userId: string): DBBook => {
     progress: progress,
     reading_status: readingStatus,
     source_title: sanitizeString(sourceTitle),
-    metadata: metadata ? sanitizeString(JSON.stringify(metadata)) : null,
+    metadata: normalizedMetadata ? sanitizeString(JSON.stringify(normalizedMetadata)) : null,
     created_at: new Date(createdAt ?? Date.now()).toISOString(),
     updated_at: new Date(updatedAt ?? Date.now()).toISOString(),
     deleted_at: deletedAt ? new Date(deletedAt).toISOString() : null,
@@ -119,6 +135,8 @@ export const transformBookFromDB = (dbBook: DBBook): Book => {
     deleted_at,
     uploaded_at,
   } = dbBook;
+  const parsedMetadata = metadata ? JSON.parse(metadata) : null;
+  const readingStats = parsedMetadata?.readingStats || {};
 
   return {
     hash: book_hash,
@@ -132,7 +150,12 @@ export const transformBookFromDB = (dbBook: DBBook): Book => {
     progress: progress,
     readingStatus: reading_status as ReadingStatus,
     sourceTitle: source_title,
-    metadata: metadata ? JSON.parse(metadata) : null,
+    metadata: parsedMetadata,
+    wordCount: typeof readingStats.wordCount === 'number' ? readingStats.wordCount : undefined,
+    vocabularyCount:
+      typeof readingStats.vocabularyCount === 'number' ? readingStats.vocabularyCount : undefined,
+    readingTimeMs:
+      typeof readingStats.readingTimeMs === 'number' ? readingStats.readingTimeMs : undefined,
     createdAt: new Date(created_at!).getTime(),
     updatedAt: new Date(updated_at!).getTime(),
     deletedAt: deleted_at ? new Date(deleted_at).getTime() : null,

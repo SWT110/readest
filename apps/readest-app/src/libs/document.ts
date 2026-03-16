@@ -61,6 +61,11 @@ export type BookMetadata = {
   coverImageFile?: string;
   coverImageUrl?: string;
   coverImageBlobUrl?: string;
+  readingStats?: {
+    wordCount?: number;
+    vocabularyCount?: number;
+    readingTimeMs?: number;
+  };
 };
 
 export interface BookDoc {

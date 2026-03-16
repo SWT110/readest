@@ -172,10 +172,15 @@ export const getPosition = (
   } as Position;
   const startInView = pointIsInView(start.point);
   const endInView = pointIsInView(end.point);
+  const firstLineThreshold = 28;
+  const isFirstLine = first.top - rect.top <= firstLineThreshold;
   if (!startInView && !endInView) return { point: { x: 0, y: 0 } };
-  if (!startInView) return end;
-  if (!endInView) return start;
-  return start.point.y > window.innerHeight - end.point.y ? start : end;
+  if (isFirstLine) {
+    if (endInView) return end;
+    return start;
+  }
+  if (startInView) return start;
+  return end;
 };
 
 // The popup will be positioned based on the triangle position and the direction

@@ -92,6 +92,8 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
     settings.globalReadSettings.highlightStyles[selectedStyle],
   );
   const androidTouchEndRef = useRef(false);
+  const [autoPronounceWordLookup, setAutoPronounceWordLookup] = useState(false);
+  const forceDictionaryPopupRef = useRef(false);
 
   const showingPopup =
     showAnnotPopup ||
@@ -107,7 +109,7 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
   const dictPopupWidth = Math.min(480, maxWidth);
   const dictPopupHeight = Math.min(300, maxHeight);
   const transPopupWidth = Math.min(480, maxWidth);
-  const transPopupHeight = Math.min(265, maxHeight);
+  const transPopupHeight = Math.min(340, maxHeight);
   const proofreadPopupWidth = Math.min(440, maxWidth);
   const proofreadPopupHeight = Math.min(200, maxHeight);
   const annotPopupWidth = Math.min(useResponsiveSize(300), maxWidth);
@@ -201,6 +203,8 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
       setShowDeepLPopup(false);
       setShowProofreadPopup(false);
       setEditingAnnotation(null);
+      setAutoPronounceWordLookup(false);
+      forceDictionaryPopupRef.current = false;
     }, 500),
     [],
   );
@@ -549,7 +553,12 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
       const { enableAnnotationQuickActions, annotationQuickAction } = viewSettings;
       if (enableAnnotationQuickActions && annotationQuickAction && isTextSelected.current) {
         handleQuickAction();
+      } else if (forceDictionaryPopupRef.current) {
+        forceDictionaryPopupRef.current = false;
+        setShowAnnotPopup(false);
+        setShowWiktionaryPopup(true);
       } else {
+        setAutoPronounceWordLookup(false);
         handleShowAnnotPopup();
       }
     }
@@ -733,6 +742,7 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
 
   const handleDictionary = () => {
     if (!selection || !selection.text) return;
+    setAutoPronounceWordLookup(false);
     setShowAnnotPopup(false);
     setShowWiktionaryPopup(true);
   };
@@ -775,6 +785,154 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
       return;
     }
   };
+
+  const pickWordAtPoint = useCallback(
+    (clientX: number, clientY: number) => {
+      const currentView = getView(bookKey);
+      const contents = currentView?.renderer.getContents?.() || [];
+      const isWordChar = (char: string) => /[\p{L}\p{M}'’-]/u.test(char);
+      const isWrapperChar = (char: string) => /['’-]/.test(char);
+      const isWordCharacter = (char: string) =>
+        isWordChar(char) || /[\p{L}\p{M}'\u2019-]/u.test(char);
+      const isWrapperCharacter = (char: string) =>
+        isWrapperChar(char) || /['\u2019-]/.test(char);
+      const isPointInsideRange = (range: Range) => {
+        const tolerance = 1;
+        const rects = Array.from(range.getClientRects());
+        if (!rects.length) return false;
+        return rects.some(
+          (rect) =>
+            clientX >= rect.left - tolerance &&
+            clientX <= rect.right + tolerance &&
+            clientY >= rect.top - tolerance &&
+            clientY <= rect.bottom + tolerance,
+        );
+      };
+
+      for (const { doc, index } of contents) {
+        let caretRange: Range | null = null;
+
+        if (doc.caretRangeFromPoint) {
+          caretRange = doc.caretRangeFromPoint(clientX, clientY);
+        } else if (doc.caretPositionFromPoint) {
+          const position = doc.caretPositionFromPoint(clientX, clientY);
+          if (position) {
+            caretRange = doc.createRange();
+            caretRange.setStart(position.offsetNode, position.offset);
+            caretRange.setEnd(position.offsetNode, position.offset);
+          }
+        }
+
+        if (!caretRange) continue;
+
+        const container = caretRange.startContainer;
+        if (container.nodeType !== Node.TEXT_NODE) continue;
+
+        const textNode = container as Text;
+        const text = textNode.textContent || '';
+        if (!text) continue;
+
+        const caretOffset = Math.max(0, Math.min(caretRange.startOffset, text.length));
+        const offsetCandidates = Array.from(new Set([caretOffset, caretOffset - 1])).filter(
+          (offset) => offset >= 0 && offset < text.length,
+        );
+
+        let pointerOffset: number | null = null;
+        for (const offset of offsetCandidates) {
+          if (!isWordCharacter(text[offset] || '')) continue;
+          const charRange = doc.createRange();
+          charRange.setStart(textNode, offset);
+          charRange.setEnd(textNode, Math.min(offset + 1, text.length));
+          if (isPointInsideRange(charRange)) {
+            pointerOffset = offset;
+            break;
+          }
+        }
+
+        if (pointerOffset === null) continue;
+
+        let startOffset = pointerOffset;
+        let endOffset = pointerOffset + 1;
+
+        while (startOffset > 0 && isWordCharacter(text[startOffset - 1] || '')) {
+          startOffset -= 1;
+        }
+        while (endOffset < text.length && isWordCharacter(text[endOffset] || '')) {
+          endOffset += 1;
+        }
+        while (startOffset < endOffset && isWrapperCharacter(text[startOffset] || '')) {
+          startOffset += 1;
+        }
+        while (endOffset > startOffset && isWrapperCharacter(text[endOffset - 1] || '')) {
+          endOffset -= 1;
+        }
+
+        const word = text.slice(startOffset, endOffset).trim();
+        if (!word) continue;
+
+        const range = doc.createRange();
+        range.setStart(textNode, startOffset);
+        range.setEnd(textNode, endOffset);
+        if (!isPointInsideRange(range)) continue;
+
+        return { word, range, index };
+      }
+
+      return null;
+    },
+    [bookKey, getView],
+  );
+
+  const handleWordLookupClick = useCallback(
+    (event: CustomEvent): boolean => {
+      const detail = event.detail as {
+        bookKey?: string;
+        clientX?: number;
+        clientY?: number;
+      };
+
+      if (detail.bookKey !== bookKey) return false;
+
+      const currentViewSettings = getViewSettings(bookKey);
+      if (!currentViewSettings?.tapWordLookup) return false;
+      if (typeof detail.clientX !== 'number' || typeof detail.clientY !== 'number') return false;
+
+      const picked = pickWordAtPoint(detail.clientX, detail.clientY);
+      if (!picked) return false;
+
+      const currentView = getView(bookKey);
+      const currentProgress = getProgress(bookKey);
+      const pickedIndex =
+        typeof picked.index === 'number' ? picked.index : (currentProgress?.index ?? 0);
+      const page = bookData.isFixedLayout ? pickedIndex + 1 : currentProgress?.page || 0;
+      const shouldAutoPronounce = currentViewSettings.tapWordAutoPronounce ?? true;
+
+      forceDictionaryPopupRef.current = true;
+      setAutoPronounceWordLookup(shouldAutoPronounce);
+      setSelection({
+        key: bookKey,
+        text: picked.word,
+        cfi: currentView?.getCFI(pickedIndex, picked.range),
+        page,
+        range: picked.range,
+        index: pickedIndex,
+      });
+      setShowAnnotPopup(false);
+      setShowWikipediaPopup(false);
+      setShowDeepLPopup(false);
+      setShowProofreadPopup(false);
+      setShowWiktionaryPopup(true);
+      return true;
+    },
+    [bookKey, getProgress, getView, getViewSettings, pickWordAtPoint, bookData.isFixedLayout],
+  );
+
+  useEffect(() => {
+    eventDispatcher.onSync('iframe-word-click', handleWordLookupClick);
+    return () => {
+      eventDispatcher.offSync('iframe-word-click', handleWordLookupClick);
+    };
+  }, [handleWordLookupClick]);
 
   const handleStartEditAnnotation = useCallback(() => {
     setShowAnnotPopup(false);
@@ -939,6 +1097,9 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
         <WiktionaryPopup
           word={selection?.text as string}
           lang={bookData.bookDoc?.metadata.language as string}
+          dictionaryName={viewSettings.dictionaryName}
+          dictionaryServerUrl={viewSettings.dictionaryServerUrl}
+          autoPronounce={autoPronounceWordLookup}
           position={dictPopupPosition}
           trianglePosition={trianglePosition}
           popupWidth={dictPopupWidth}
@@ -959,6 +1120,7 @@ const Annotator: React.FC<{ bookKey: string }> = ({ bookKey }) => {
       )}
       {showDeepLPopup && trianglePosition && translatorPopupPosition && (
         <TranslatorPopup
+          bookKey={bookKey}
           text={selection?.text as string}
           position={translatorPopupPosition}
           trianglePosition={trianglePosition}

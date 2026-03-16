@@ -43,7 +43,10 @@ export interface ReadSettings {
   notebookActiveTab: NotebookTab;
   autohideCursor: boolean;
   translationProvider: string;
+  translationModel: string;
   translateTargetLang: string;
+  dictionaryServerUrl: string;
+  dictionaryName: string;
 
   highlightStyle: HighlightStyle;
   highlightStyles: Record<HighlightStyle, HighlightColor>;

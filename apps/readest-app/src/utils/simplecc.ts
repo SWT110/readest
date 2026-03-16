@@ -1,13 +1,43 @@
-import init, { simplecc } from '@simplecc/simplecc_wasm';
 import { ConvertChineseVariant } from '@/types/book';
 
+type SimpleCCModule = {
+  default: (moduleOrPath?: string) => Promise<void>;
+  simplecc: (text: string, variant: ConvertChineseVariant) => string;
+};
+
 let initialized = false;
+let initializingPromise: Promise<void> | null = null;
+let simpleccImpl: SimpleCCModule['simplecc'] | null = null;
+
+const loadSimpleCCModule = async (): Promise<SimpleCCModule | null> => {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    const dynamicImport = new Function(
+      'path',
+      'return import(/* webpackIgnore: true */ path)',
+    ) as (path: string) => Promise<SimpleCCModule>;
+    return await dynamicImport('/vendor/simplecc/simplecc_wasm.js');
+  } catch (error) {
+    console.warn('Failed to load SimpleCC wasm module:', error);
+    return null;
+  }
+};
 
 const initSimpleCC = async () => {
   if (initialized) return;
+  if (initializingPromise) return initializingPromise;
 
-  await init('/vendor/simplecc/simplecc_wasm_bg.wasm');
-  initialized = true;
+  initializingPromise = (async () => {
+    const simpleccModule = await loadSimpleCCModule();
+    if (!simpleccModule) return;
+
+    await simpleccModule.default('/vendor/simplecc/simplecc_wasm_bg.wasm');
+    simpleccImpl = simpleccModule.simplecc;
+    initialized = true;
+  })();
+
+  await initializingPromise;
 };
 
 const convertReverseMap: Record<ConvertChineseVariant, ConvertChineseVariant> = {
@@ -23,7 +53,14 @@ const convertReverseMap: Record<ConvertChineseVariant, ConvertChineseVariant> = 
 };
 
 const runSimpleCC = (text: string, variant: ConvertChineseVariant, reverse = false): string => {
-  return reverse ? simplecc(text, convertReverseMap[variant]) : simplecc(text, variant);
+  if (!simpleccImpl) return text;
+
+  try {
+    return reverse ? simpleccImpl(text, convertReverseMap[variant]) : simpleccImpl(text, variant);
+  } catch (error) {
+    console.warn('Failed to run SimpleCC conversion:', error);
+    return text;
+  }
 };
 
 export { initSimpleCC, runSimpleCC };

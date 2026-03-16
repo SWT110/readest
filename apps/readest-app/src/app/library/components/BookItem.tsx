@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { MdCheckCircle, MdCheckCircleOutline } from 'react-icons/md';
+import { MdCheckCircle, MdCheckCircleOutline, MdBarChart } from 'react-icons/md';
 import {
   LiaCloudUploadAltSolid,
   LiaCloudDownloadAltSolid,
@@ -16,6 +16,7 @@ import { useResponsiveSize } from '@/hooks/useResponsiveSize';
 import { LibraryCoverFitType, LibraryViewModeType } from '@/types/settings';
 import { navigateToLogin } from '@/utils/nav';
 import { formatAuthors, formatDescription } from '@/utils/book';
+import { formatReadingDuration, getBookReadingStats } from '@/utils/readingStats';
 import ReadingProgress from './ReadingProgress';
 import BookCover from '@/components/BookCover';
 
@@ -29,6 +30,7 @@ interface BookItemProps {
   handleBookUpload: (book: Book) => void;
   handleBookDownload: (book: Book, options?: { redownload?: boolean; queued?: boolean }) => void;
   showBookDetailsModal: (book: Book) => void;
+  showVocabularyStatsModal: (book: Book) => void;
 }
 
 const BookItem: React.FC<BookItemProps> = ({
@@ -41,12 +43,15 @@ const BookItem: React.FC<BookItemProps> = ({
   handleBookUpload,
   handleBookDownload,
   showBookDetailsModal,
+  showVocabularyStatsModal,
 }) => {
   const _ = useTranslation();
   const router = useRouter();
   const { user } = useAuth();
   const { appService } = useEnv();
   const { settings } = useSettingsStore();
+  const readingStats = getBookReadingStats(book);
+  const readingTimeLabel = formatReadingDuration(readingStats.readingTimeMs);
   const iconSize15 = useResponsiveSize(15);
 
   return (
@@ -99,13 +104,21 @@ const BookItem: React.FC<BookItemProps> = ({
         <div className={clsx('min-w-0 flex-1', mode === 'list' && 'flex flex-col gap-2')}>
           <h4
             className={clsx(
-              'overflow-hidden text-ellipsis font-semibold',
+              'overflow-hidden text-ellipsis text-center font-semibold',
               mode === 'grid' && 'block whitespace-nowrap text-[0.6em] text-xs',
               mode === 'list' && 'line-clamp-2 text-base',
             )}
           >
             {book.title}
           </h4>
+          <p
+            className={clsx(
+              'text-neutral-content/70 text-center',
+              mode === 'grid' ? 'line-clamp-1 text-[0.55em]' : 'line-clamp-1 text-xs',
+            )}
+          >
+            {_('Reading {{time}}', { time: readingTimeLabel })}
+          </p>
           {mode === 'list' && (
             <p className='text-neutral-content line-clamp-1 text-sm'>
               {formatAuthors(book.author, book.primaryLanguage) || ''}
@@ -130,18 +143,32 @@ const BookItem: React.FC<BookItemProps> = ({
           {(book.progress || book.readingStatus) && <ReadingProgress book={book} />}
           <div className='flex items-center justify-center gap-x-2'>
             {!appService?.isMobile && (
-              <button
-                aria-label={_('Show Book Details')}
-                className='show-detail-button -m-2 p-2 sm:opacity-0 sm:group-hover:opacity-100'
-                onPointerDown={(e) => e.stopPropagation()}
-                onClick={() => {
-                  showBookDetailsModal(book);
-                }}
-              >
-                <div className='pt-[2px] sm:pt-[1px]'>
-                  <LiaInfoCircleSolid size={iconSize15} />
-                </div>
-              </button>
+              <>
+                <button
+                  aria-label={_('Show Book Details')}
+                  className='show-detail-button -m-2 p-2 sm:opacity-0 sm:group-hover:opacity-100'
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={() => {
+                    showBookDetailsModal(book);
+                  }}
+                >
+                  <div className='pt-[2px] sm:pt-[1px]'>
+                    <LiaInfoCircleSolid size={iconSize15} />
+                  </div>
+                </button>
+                <button
+                  aria-label={_('Vocabulary Statistics')}
+                  className='show-detail-button -m-2 p-2 sm:opacity-0 sm:group-hover:opacity-100'
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={() => {
+                    showVocabularyStatsModal(book);
+                  }}
+                >
+                  <div className='pt-[2px] sm:pt-[1px]'>
+                    <MdBarChart size={iconSize15} />
+                  </div>
+                </button>
+              </>
             )}
             {transferProgress !== null ? (
               transferProgress === 100 ? null : (

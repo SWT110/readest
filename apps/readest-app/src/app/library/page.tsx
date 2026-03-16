@@ -51,7 +51,7 @@ import {
 } from '@/utils/window';
 
 import { LibraryGroupByType } from '@/types/settings';
-import { BookMetadata } from '@/libs/document';
+import { BookMetadata, DocumentLoader } from '@/libs/document';
 import { AboutWindow } from '@/components/AboutWindow';
 import { BookDetailModal } from '@/components/metadata';
 import { UpdaterWindow } from '@/components/UpdaterWindow';
@@ -70,12 +70,15 @@ import {
 import Spinner from '@/components/Spinner';
 import LibraryHeader from './components/LibraryHeader';
 import Bookshelf from './components/Bookshelf';
+import VocabularyStatsModal from './components/VocabularyStatsModal';
 import GroupHeader from './components/GroupHeader';
 import useShortcuts from '@/hooks/useShortcuts';
 import DropIndicator from '@/components/DropIndicator';
 import SettingsDialog from '@/components/settings/SettingsDialog';
 import ModalPortal from '@/components/ModalPortal';
 import TransferQueuePanel from './components/TransferQueuePanel';
+import { computeBookVocabularyStats, VocabularyStatsResult } from '@/utils/vocabularyStats';
+import { ClosableFile } from '@/utils/file';
 
 const LibraryPageWithSearchParams = () => {
   const searchParams = useSearchParams();
@@ -117,6 +120,10 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
   const [isSelectAll, setIsSelectAll] = useState(false);
   const [isSelectNone, setIsSelectNone] = useState(false);
   const [showDetailsBook, setShowDetailsBook] = useState<Book | null>(null);
+  const [showVocabularyStatsBook, setShowVocabularyStatsBook] = useState<Book | null>(null);
+  const [vocabularyStats, setVocabularyStats] = useState<VocabularyStatsResult | null>(null);
+  const [vocabularyStatsLoading, setVocabularyStatsLoading] = useState(false);
+  const [vocabularyStatsError, setVocabularyStatsError] = useState<string | null>(null);
   const [currentGroupPath, setCurrentGroupPath] = useState<string | undefined>(undefined);
   const [currentSeriesAuthorGroup, setCurrentSeriesAuthorGroup] = useState<{
     groupBy: typeof LibraryGroupByType.Series | typeof LibraryGroupByType.Author;
@@ -127,6 +134,8 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
   }>({});
   const [pendingNavigationBookIds, setPendingNavigationBookIds] = useState<string[] | null>(null);
   const isInitiating = useRef(false);
+  const vocabularyStatsCacheRef = useRef<Record<string, VocabularyStatsResult>>({});
+  const vocabularyStatsRequestRef = useRef(0);
 
   const iconSize = useResponsiveSize(18);
   const viewSettings = settings.globalViewSettings;
@@ -798,6 +807,64 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
     setShowDetailsBook(book);
   };
 
+  const loadVocabularyStats = useCallback(
+    async (book: Book) => {
+      if (!appService) return;
+      const requestId = ++vocabularyStatsRequestRef.current;
+      const cached = vocabularyStatsCacheRef.current[book.hash];
+      if (cached) {
+        if (requestId !== vocabularyStatsRequestRef.current) return;
+        setVocabularyStats(cached);
+        setVocabularyStatsError(null);
+        setVocabularyStatsLoading(false);
+        return;
+      }
+
+      setVocabularyStatsLoading(true);
+      setVocabularyStatsError(null);
+      let closableFile: ClosableFile | null = null;
+      try {
+        const { file } = await appService.loadBookContent(book);
+        closableFile = file as ClosableFile;
+        const bookDoc = (await new DocumentLoader(file).open()).book;
+        const stats = await computeBookVocabularyStats(bookDoc);
+        if (requestId !== vocabularyStatsRequestRef.current) return;
+        vocabularyStatsCacheRef.current[book.hash] = stats;
+        setVocabularyStats(stats);
+      } catch (error) {
+        if (requestId !== vocabularyStatsRequestRef.current) return;
+        console.error('Failed to compute vocabulary stats:', error);
+        setVocabularyStatsError(_('Unable to analyze this book right now.'));
+      } finally {
+        if (closableFile?.close) {
+          await closableFile.close();
+        }
+        if (requestId !== vocabularyStatsRequestRef.current) return;
+        setVocabularyStatsLoading(false);
+      }
+    },
+    [_, appService],
+  );
+
+  const handleShowVocabularyStats = (book: Book) => {
+    setShowVocabularyStatsBook(book);
+    setVocabularyStats(vocabularyStatsCacheRef.current[book.hash] || null);
+    setVocabularyStatsError(null);
+    loadVocabularyStats(book);
+  };
+
+  const handleCloseVocabularyStats = () => {
+    vocabularyStatsRequestRef.current += 1;
+    setShowVocabularyStatsBook(null);
+    setVocabularyStatsError(null);
+    setVocabularyStatsLoading(false);
+  };
+
+  const handleRetryVocabularyStats = () => {
+    if (!showVocabularyStatsBook) return;
+    loadVocabularyStats(showVocabularyStatsBook);
+  };
+
   const handleNavigateToPath = (path: string | undefined) => {
     const group = path ? getGroupId(path) || '' : '';
     setIsSelectAll(false);
@@ -934,6 +1001,7 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
                 handleBookDelete={handleBookDelete('both')}
                 handleSetSelectMode={handleSetSelectMode}
                 handleShowDetailsBook={handleShowDetailsBook}
+                handleShowVocabularyStats={handleShowVocabularyStats}
                 handleLibraryNavigation={handleLibraryNavigation}
                 booksTransferProgress={booksTransferProgress}
                 handlePushLibrary={pushLibrary}
@@ -970,6 +1038,18 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
           handleBookDeleteLocalCopy={handleBookDelete('local')}
           handleBookMetadataUpdate={handleUpdateMetadata}
         />
+      )}
+      {showVocabularyStatsBook && (
+        <ModalPortal>
+          <VocabularyStatsModal
+            book={showVocabularyStatsBook}
+            loading={vocabularyStatsLoading}
+            error={vocabularyStatsError}
+            stats={vocabularyStats}
+            onClose={handleCloseVocabularyStats}
+            onRetry={handleRetryVocabularyStats}
+          />
+        </ModalPortal>
       )}
       {isTransferQueueOpen && (
         <ModalPortal>

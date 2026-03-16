@@ -130,10 +130,13 @@ services:
         NEXT_PUBLIC_OBJECT_STORAGE_TYPE: s3
         NEXT_PUBLIC_STORAGE_FIXED_QUOTA: ${STORAGE_FIXED_QUOTA}
         NEXT_PUBLIC_TRANSLATION_FIXED_QUOTA: ${TRANSLATION_FIXED_QUOTA}
+        DOCKER_BUILD: "true"
     restart: unless-stopped
     ports:
       - "3000:3000"
-#    to enable hot reload, mount the source code as a volume, and artifacts as anon volumes
+    volumes:
+      - ../dictionaries:/app/dictionaries:ro
+    #    to enable hot reload, mount the source code as a volume, and artifacts as anon volumes
 #    volumes:
 #      - ../:/app
 #      - /app/node_modules
@@ -150,6 +153,10 @@ services:
       S3_BUCKET_NAME: ${S3_BUCKET_NAME}
       S3_ACCESS_KEY_ID: ${MINIO_ROOT_USER}
       S3_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
+      SILICONFLOW_API_KEY: ${SILICONFLOW_API_KEY}
+      SILICONFLOW_API_BASE_URL: ${SILICONFLOW_API_BASE_URL}
+      SILICONFLOW_TRANSLATION_MODEL: ${SILICONFLOW_TRANSLATION_MODEL}
+      DICTIONARY_DIR: ${DICTIONARY_DIR}
     depends_on:
       - kong
       - minio

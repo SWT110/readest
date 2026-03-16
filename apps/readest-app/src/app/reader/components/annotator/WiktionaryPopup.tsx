@@ -3,6 +3,7 @@ import { MdArrowBack } from 'react-icons/md';
 import { Position } from '@/utils/sel';
 import { useTranslation } from '@/hooks/useTranslation';
 import Popup from '@/components/Popup';
+import { buildWordLookupCandidates } from '@/utils/wordLookup';
 
 type Definition = {
   definition: string;
@@ -18,6 +19,9 @@ type Result = {
 interface WiktionaryPopupProps {
   word: string;
   lang?: string;
+  dictionaryName?: string;
+  dictionaryServerUrl?: string;
+  autoPronounce?: boolean;
   position: Position;
   trianglePosition: Position;
   popupWidth: number;
@@ -28,6 +32,9 @@ interface WiktionaryPopupProps {
 const WiktionaryPopup: React.FC<WiktionaryPopupProps> = ({
   word,
   lang,
+  dictionaryName,
+  dictionaryServerUrl,
+  autoPronounce = false,
   position,
   trianglePosition,
   popupWidth,
@@ -35,6 +42,7 @@ const WiktionaryPopup: React.FC<WiktionaryPopupProps> = ({
   onDismiss,
 }) => {
   const _ = useTranslation();
+  const [sourceLabel, setSourceLabel] = useState('Wiktionary (CC BY-SA)');
   const [history, setHistory] = useState<{ items: string[]; index: number }>({
     items: [word],
     index: 0,
@@ -51,9 +59,43 @@ const WiktionaryPopup: React.FC<WiktionaryPopupProps> = ({
   const canGoBack = history.index > 0;
   const showBackButton = canGoBack && isBackVisible;
 
+  const normalizeDictionaryServerUrl = (raw?: string) => {
+    const trimmed = raw?.trim();
+    if (!trimmed) return '';
+    const withProtocol = /^https?:\/\//i.test(trimmed) ? trimmed : `http://${trimmed}`;
+    return withProtocol.replace(/\/+$/, '');
+  };
+
+  const sanitizeDefinitionHtml = (definition: string) => definition.replace(/\u0000/g, '');
+
+  const normalizePronounceWord = (input: string) => {
+    return input
+      .trim()
+      .split(/\s+/)[0]
+      ?.replace(/^[^A-Za-z]+|[^A-Za-z]+$/g, '');
+  };
+
   useEffect(() => {
     setHistory({ items: [word], index: 0 });
   }, [word]);
+
+  useEffect(() => {
+    if (!autoPronounce) return;
+
+    const pronunciationWord = normalizePronounceWord(lookupWord);
+    if (!pronunciationWord) return;
+
+    const audio = new Audio(
+      `http://dict.youdao.com/dictvoice?audio=${encodeURIComponent(pronunciationWord)}&type=2`,
+    );
+    audio.play().catch(() => {
+      // Ignore autoplay errors silently.
+    });
+
+    return () => {
+      audio.pause();
+    };
+  }, [lookupWord, autoPronounce]);
 
   useEffect(() => {
     if (!canGoBack) {
@@ -148,25 +190,66 @@ const WiktionaryPopup: React.FC<WiktionaryPopupProps> = ({
     });
   };
 
-  const interceptDictLinks = (definition: string): HTMLElement[] => {
+  const interceptDictLinks = (definition: string): Node[] => {
     const container = document.createElement('div');
-    container.innerHTML = definition;
+    container.innerHTML = sanitizeDefinitionHtml(definition);
+    container
+      .querySelectorAll(
+        [
+          'audio',
+          'source',
+          'a[href^="sound:"]',
+          'a[href^="audio:"]',
+          'a[href^="sound://"]',
+          'img[type="uk"]',
+          'img[type="us"]',
+          '[record="true"]',
+          '[class*="pron"]',
+          '[class*="phon"]',
+          '[id*="pron"]',
+          '[id*="phon"]',
+          'y',
+        ].join(','),
+      )
+      .forEach((node) => node.remove());
+    container.querySelectorAll('i-g').forEach((node) => {
+      if (node.querySelector('[id*="phon"],a[href^="sound://"],img[type="uk"],img[type="us"]')) {
+        node.remove();
+      }
+    });
+    const textNodesToRemove: Text[] = [];
+    const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+    while (walker.nextNode()) {
+      const textNode = walker.currentNode as Text;
+      const value = textNode.textContent?.trim() || '';
+      if (!value) continue;
+      if (/^\/[^/\n]+\/$/.test(value) || /^(AmE|BrE)$/i.test(value)) {
+        textNodesToRemove.push(textNode);
+      }
+    }
+    textNodesToRemove.forEach((node) => node.remove());
 
-    const links = container.querySelectorAll<HTMLAnchorElement>('a[rel="mw:WikiLink"]');
+    const links = container.querySelectorAll<HTMLAnchorElement>('a');
 
     links.forEach((link) => {
+      const href = link.getAttribute('href') || '';
       const title = link.getAttribute('title');
-      if (title) {
+      const entryWord = href.startsWith('entry://')
+        ? decodeURIComponent(href.replace('entry://', '').trim())
+        : '';
+      const targetWord = title || entryWord;
+
+      if (targetWord) {
         link.addEventListener('click', (event) => {
           event.preventDefault();
-          pushHistory(title);
+          pushHistory(targetWord);
         });
 
         link.className = 'not-eink:text-primary underline cursor-pointer';
       }
     });
 
-    return Array.from(container.childNodes) as HTMLElement[];
+    return Array.from(container.childNodes);
   };
 
   useEffect(() => {
@@ -178,72 +261,121 @@ const WiktionaryPopup: React.FC<WiktionaryPopupProps> = ({
     const footer = footerRef.current;
     if (!main || !footer) return;
 
-    const fetchDefinitions = async (word: string, language?: string) => {
-      main.innerHTML = '';
-      footer.dataset['state'] = 'loading';
+    const renderResults = (word: string, results: Result[]) => {
+      const hgroup = document.createElement('hgroup');
+      const h1 = document.createElement('h1');
+      h1.innerText = word;
+      h1.className = 'text-lg font-bold tracking-tight';
 
-      try {
+      const p = document.createElement('p');
+      p.innerText = results[0]!.language;
+      p.className = 'text-xs uppercase tracking-wide not-eink:opacity-65';
+      hgroup.append(h1, p);
+      main.append(hgroup);
+
+      results.forEach(({ partOfSpeech, definitions }: Result) => {
+        const h2 = document.createElement('h2');
+        h2.innerText = partOfSpeech;
+        h2.className = 'text-sm font-semibold mt-4 rounded bg-base-200/50 px-2 py-1';
+
+        const ol = document.createElement('ol');
+        ol.className = 'pl-6 list-decimal space-y-1';
+
+        definitions.forEach(({ definition, examples }: Definition) => {
+          if (!definition) return;
+          const li = document.createElement('li');
+          const processedContent = interceptDictLinks(definition);
+          li.append(...processedContent);
+
+          if (examples) {
+            const ul = document.createElement('ul');
+            ul.className = 'pl-5 list-disc text-sm italic not-eink:opacity-75';
+
+            examples.forEach((example) => {
+              const exampleLi = document.createElement('li');
+              exampleLi.innerHTML = example;
+              ul.appendChild(exampleLi);
+            });
+
+            li.appendChild(ul);
+          }
+
+          ol.appendChild(li);
+        });
+
+        main.appendChild(h2);
+        main.appendChild(ol);
+      });
+    };
+
+    const fetchFromWiktionary = async (word: string, language?: string) => {
+      const candidates = buildWordLookupCandidates(word);
+      for (const candidate of candidates) {
         const response = await fetch(
-          `https://en.wiktionary.org/api/rest_v1/page/definition/${word}`,
+          `https://en.wiktionary.org/api/rest_v1/page/definition/${encodeURIComponent(candidate)}`,
         );
-        if (!response.ok) {
-          throw new Error('Failed to fetch definitions');
-        }
-
+        if (!response.ok) continue;
         const json = await response.json();
         const results: Result[] | undefined = language
           ? json[language] || json['en']
           : json[Object.keys(json)[0]!];
+        if (results && results.length > 0) {
+          return { word: candidate, results };
+        }
+      }
+      return null;
+    };
 
-        if (!results || results.length === 0) {
+    const fetchDefinitions = async (word: string, language?: string) => {
+      main.innerHTML = '';
+      footer.dataset['state'] = 'loading';
+      setSourceLabel('Wiktionary (CC BY-SA)');
+
+      try {
+        if (dictionaryName) {
+          try {
+            const baseUrl = normalizeDictionaryServerUrl(dictionaryServerUrl);
+            const lookupBase = new URL(
+              `${baseUrl}/api/dictionaries/lookup`,
+              typeof window !== 'undefined' ? window.location.origin : undefined,
+            );
+            const candidates = buildWordLookupCandidates(word);
+
+            let lookupResult: Result[] = [];
+            let matchedWord = word;
+            for (const candidate of candidates) {
+              const lookupUrl = new URL(lookupBase.toString());
+              lookupUrl.searchParams.set('dictionary', dictionaryName);
+              lookupUrl.searchParams.set('word', candidate);
+              const response = await fetch(lookupUrl.toString());
+              if (!response.ok) continue;
+              const json = await response.json();
+              const results: Result[] = json.results || [];
+              if (results.length > 0) {
+                lookupResult = results;
+                matchedWord = json.word || candidate;
+                break;
+              }
+            }
+
+            if (lookupResult.length) {
+              renderResults(matchedWord, lookupResult);
+              setSourceLabel(`${dictionaryName} (server)`);
+              footer.dataset['state'] = 'loaded';
+              return;
+            }
+          } catch (serverLookupError) {
+            console.warn('Server dictionary lookup failed, falling back to Wiktionary:', serverLookupError);
+          }
+        }
+
+        const wiktionary = await fetchFromWiktionary(word, language);
+        if (!wiktionary) {
           throw new Error('No results found');
         }
 
-        const hgroup = document.createElement('hgroup');
-        const h1 = document.createElement('h1');
-        h1.innerText = word;
-        h1.className = 'text-lg font-bold';
-
-        const p = document.createElement('p');
-        p.innerText = results[0]!.language;
-        p.className = 'text-sm italic not-eink:opacity-75';
-        hgroup.append(h1, p);
-        main.append(hgroup);
-
-        results.forEach(({ partOfSpeech, definitions }: Result) => {
-          const h2 = document.createElement('h2');
-          h2.innerText = partOfSpeech;
-          h2.className = 'text-base font-semibold mt-4';
-
-          const ol = document.createElement('ol');
-          ol.className = 'pl-8 list-decimal';
-
-          definitions.forEach(({ definition, examples }: Definition) => {
-            if (!definition) return;
-            const li = document.createElement('li');
-            const processedContent = interceptDictLinks(definition);
-            li.append(...processedContent);
-
-            if (examples) {
-              const ul = document.createElement('ul');
-              ul.className = 'pl-8 list-disc text-sm italic not-eink:opacity-75';
-
-              examples.forEach((example) => {
-                const exampleLi = document.createElement('li');
-                exampleLi.innerHTML = example;
-                ul.appendChild(exampleLi);
-              });
-
-              li.appendChild(ul);
-            }
-
-            ol.appendChild(li);
-          });
-
-          main.appendChild(h2);
-          main.appendChild(ol);
-        });
-
+        renderResults(wiktionary.word, wiktionary.results);
+        setSourceLabel('Wiktionary (CC BY-SA)');
         footer.dataset['state'] = 'loaded';
       } catch (error) {
         console.error(error);
@@ -258,11 +390,17 @@ const WiktionaryPopup: React.FC<WiktionaryPopupProps> = ({
         h1.className = 'text-lg font-bold';
 
         const p = document.createElement('p');
-        p.innerHTML = _('Unable to load the word. Try searching directly on {{link}}.', {
-          link: `<a href="https://en.wiktionary.org/w/index.php?search=${encodeURIComponent(
-            word,
-          )}" target="_blank" rel="noopener noreferrer" class="not-eink:text-primary underline">Wiktionary</a>`,
-        });
+        if (dictionaryName) {
+          p.innerHTML = _(
+            'Unable to load the word from the selected server dictionary and Wiktionary.',
+          );
+        } else {
+          p.innerHTML = _('Unable to load the word. Try searching directly on {{link}}.', {
+            link: `<a href="https://en.wiktionary.org/w/index.php?search=${encodeURIComponent(
+              word,
+            )}" target="_blank" rel="noopener noreferrer" class="not-eink:text-primary underline">Wiktionary</a>`,
+          });
+        }
 
         div.append(h1, p);
         main.append(div);
@@ -271,7 +409,7 @@ const WiktionaryPopup: React.FC<WiktionaryPopupProps> = ({
 
     fetchDefinitions(lookupWord, langCode);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [_, lookupWord, lang]);
+  }, [_, lookupWord, lang, dictionaryName, dictionaryServerUrl]);
 
   return (
     <div>
@@ -280,7 +418,7 @@ const WiktionaryPopup: React.FC<WiktionaryPopupProps> = ({
         width={popupWidth}
         height={popupHeight}
         position={position}
-        className='select-text'
+        className='select-text overflow-hidden'
         onDismiss={onDismiss}
       >
         <div className='relative flex h-full flex-col'>
@@ -300,7 +438,7 @@ const WiktionaryPopup: React.FC<WiktionaryPopupProps> = ({
           )}
           <main
             ref={mainRef}
-            className='flex-grow overflow-y-auto px-4 pb-4 font-sans'
+            className='flex-grow overflow-y-auto bg-base-100/70 px-4 pb-4 font-sans'
             style={{
               paddingTop: showBackButton ? 48 : 16,
               transition: 'padding-top 180ms ease-out',
@@ -311,7 +449,7 @@ const WiktionaryPopup: React.FC<WiktionaryPopupProps> = ({
             className='mt-auto hidden data-[state=loaded]:block data-[state=error]:hidden data-[state=loading]:hidden'
           >
             <div className='not-eink:opacity-60 flex items-center px-4 py-2 text-sm'>
-              Source: Wiktionary (CC BY-SA)
+              Source: {sourceLabel}
             </div>
           </footer>
         </div>

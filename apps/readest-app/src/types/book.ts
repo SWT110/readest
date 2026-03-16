@@ -58,6 +58,9 @@ export interface Book {
   progress?: [number, number]; // Add progress field: [current, total], 1-based page number
   readingStatus?: ReadingStatus;
   primaryLanguage?: string;
+  wordCount?: number;
+  vocabularyCount?: number;
+  readingTimeMs?: number;
 
   metadata?: BookMetadata;
 }
@@ -119,6 +122,8 @@ export interface BookLayout {
   gapPercent: number;
   scrolled: boolean;
   disableClick: boolean;
+  tapWordLookup: boolean;
+  tapWordAutoPronounce: boolean;
   fullscreenClickArea: boolean;
   swapClickArea: boolean;
   disableDoubleClick: boolean;
@@ -237,7 +242,10 @@ export interface TTSConfig {
 export interface TranslatorConfig {
   translationEnabled: boolean;
   translationProvider: string;
+  translationModel: string;
   translateTargetLang: string;
+  dictionaryServerUrl: string;
+  dictionaryName: string;
   showTranslateSource: boolean;
   ttsReadAloudText: string;
 }

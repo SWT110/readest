@@ -1,0 +1,26 @@
+{
+  "hello": [
+    {
+      "partOfSpeech": "interjection",
+      "language": "English",
+      "definitions": [
+        {
+          "definition": "Used as a greeting or to begin a conversation.",
+          "examples": ["Hello, world."]
+        }
+      ]
+    }
+  ],
+  "translation": [
+    {
+      "partOfSpeech": "noun",
+      "language": "English",
+      "definitions": [
+        {
+          "definition": "The act of converting text from one language into another.",
+          "examples": ["Machine translation needs careful review."]
+        }
+      ]
+    }
+  ]
+}

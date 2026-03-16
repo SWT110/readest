@@ -85,6 +85,11 @@ import { CustomTextureInfo } from '@/styles/textures';
 import { CustomFont, CustomFontInfo } from '@/styles/fonts';
 import { parseFontInfo } from '@/utils/font';
 import { svg2png } from '@/utils/svg';
+import {
+  computeBookReadingStats,
+  getBookReadingStats,
+  mergeBookReadingStats,
+} from '@/utils/readingStats';
 
 export abstract class BaseAppService implements AppService {
   osPlatform: OsPlatform = getOSPlatform();
@@ -409,7 +414,10 @@ export abstract class BaseAppService implements AppService {
       }
 
       const primaryLanguage = getPrimaryLanguage(loadedBook.metadata.language);
-      const book: Book = {
+      const existingStats = existingBook
+        ? getBookReadingStats(existingBook)
+        : { wordCount: 0, vocabularyCount: 0, readingTimeMs: 0 };
+      let book: Book = {
         hash,
         format,
         title: formatTitle(loadedBook.metadata.title),
@@ -422,6 +430,7 @@ export abstract class BaseAppService implements AppService {
         deletedAt: transient ? Date.now() : null,
         downloadedAt: Date.now(),
         updatedAt: Date.now(),
+        readingTimeMs: existingStats.readingTimeMs,
       };
       // update series info from metadata
       if (book.metadata?.belongsTo?.series) {
@@ -432,6 +441,25 @@ export abstract class BaseAppService implements AppService {
           book.metadata.seriesIndex = parseFloat(series.position || '0');
         }
       }
+
+      try {
+        if (!FIXED_LAYOUT_FORMATS.has(format) && loadedBook.sections.length > 0) {
+          const stats = await computeBookReadingStats(loadedBook);
+          book = mergeBookReadingStats(book, stats);
+        } else {
+          book = mergeBookReadingStats(book, {
+            wordCount: existingStats.wordCount,
+            vocabularyCount: existingStats.vocabularyCount,
+          });
+        }
+      } catch (error) {
+        console.warn('Failed to compute book reading stats:', error);
+        book = mergeBookReadingStats(book, {
+          wordCount: existingStats.wordCount,
+          vocabularyCount: existingStats.vocabularyCount,
+        });
+      }
+
       // update book metadata when reimporting the same book
       if (existingBook) {
         existingBook.format = book.format;
@@ -440,6 +468,9 @@ export abstract class BaseAppService implements AppService {
         existingBook.author = existingBook.author ?? book.author;
         existingBook.primaryLanguage = existingBook.primaryLanguage ?? book.primaryLanguage;
         existingBook.metadata = book.metadata;
+        existingBook.wordCount = book.wordCount;
+        existingBook.vocabularyCount = book.vocabularyCount;
+        existingBook.readingTimeMs = book.readingTimeMs;
         existingBook.downloadedAt = Date.now();
       }
 
@@ -840,6 +871,12 @@ export abstract class BaseAppService implements AppService {
 
     await Promise.all(
       books.map(async (book) => {
+        const hydrated = mergeBookReadingStats(book, {
+          wordCount: book.wordCount ?? book.metadata?.readingStats?.wordCount,
+          vocabularyCount: book.vocabularyCount ?? book.metadata?.readingStats?.vocabularyCount,
+          readingTimeMs: book.readingTimeMs ?? book.metadata?.readingStats?.readingTimeMs,
+        });
+        Object.assign(book, hydrated);
         book.coverImageUrl = await this.generateCoverImageUrl(book);
         book.updatedAt ??= book.lastUpdated || Date.now();
         return book;

@@ -137,8 +137,11 @@ export const DEFAULT_READSETTINGS: ReadSettings = {
   isNotebookPinned: false,
   notebookActiveTab: 'notes',
   autohideCursor: true,
-  translationProvider: 'deepl',
+  translationProvider: 'siliconflow',
+  translationModel: 'tencent/Hunyuan-MT-7B',
   translateTargetLang: 'EN',
+  dictionaryServerUrl: '',
+  dictionaryName: '',
 
   customThemes: [],
   highlightStyle: 'highlight',
@@ -180,6 +183,8 @@ export const DEFAULT_BOOK_LAYOUT: BookLayout = {
   gapPercent: 5,
   scrolled: false,
   disableClick: false,
+  tapWordLookup: true,
+  tapWordAutoPronounce: true,
   fullscreenClickArea: false,
   swapClickArea: false,
   disableDoubleClick: false,
@@ -299,8 +304,11 @@ export const DEFAULT_TTS_CONFIG: TTSConfig = {
 
 export const DEFAULT_TRANSLATOR_CONFIG: TranslatorConfig = {
   translationEnabled: false,
-  translationProvider: 'deepl',
+  translationProvider: 'siliconflow',
+  translationModel: 'tencent/Hunyuan-MT-7B',
   translateTargetLang: '',
+  dictionaryServerUrl: '',
+  dictionaryName: '',
   showTranslateSource: true,
   ttsReadAloudText: 'both',
 };

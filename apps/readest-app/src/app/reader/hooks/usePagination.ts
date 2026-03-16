@@ -141,8 +141,20 @@ export const usePagination = (
             }
             const viewStartX = windowStartX + viewRect.left;
             const viewCenterX = viewStartX + viewRect.width / 2;
-            const consumed = eventDispatcher.dispatchSync('iframe-single-click');
+            const consumed = eventDispatcher.dispatchSync('iframe-single-click', {
+              ...msg.data,
+              bookKey,
+            });
             if (!consumed) {
+              const wordLookupConsumed =
+                viewSettings.tapWordLookup &&
+                eventDispatcher.dispatchSync('iframe-word-click', {
+                  ...msg.data,
+                  bookKey,
+                });
+              if (wordLookupConsumed) {
+                return;
+              }
               const centerStartX = viewStartX + viewRect.width * 0.375;
               const centerEndX = viewStartX + viewRect.width * 0.625;
               if (

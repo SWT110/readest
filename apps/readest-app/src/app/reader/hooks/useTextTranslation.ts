@@ -23,11 +23,13 @@ export function useTextTranslation(
   const enabled = useRef(viewSettings?.translationEnabled);
   const [provider, setProvider] = useState(viewSettings?.translationProvider);
   const [targetLang, setTargetLang] = useState(viewSettings?.translateTargetLang);
+  const [model, setModel] = useState(viewSettings?.translationModel);
   const showTranslateSourceRef = useRef(viewSettings?.showTranslateSource);
 
   const { translate } = useTranslator({
     provider,
     targetLang: targetLang || getLocale(),
+    model,
   } as UseTranslatorOptions);
 
   const translateRef = useRef(translate);
@@ -350,6 +352,7 @@ export function useTextTranslation(
     const enabledChanged = enabled.current !== viewSettings.translationEnabled;
     const providerChanged = provider !== viewSettings.translationProvider;
     const targetLangChanged = targetLang !== viewSettings.translateTargetLang;
+    const modelChanged = model !== viewSettings.translationModel;
     const showTranslateSourceChanged =
       showTranslateSourceRef.current !== viewSettings.showTranslateSource;
 
@@ -365,6 +368,10 @@ export function useTextTranslation(
       setTargetLang(viewSettings.translateTargetLang);
     }
 
+    if (modelChanged) {
+      setModel(viewSettings.translationModel);
+    }
+
     if (showTranslateSourceChanged) {
       showTranslateSourceRef.current = viewSettings.showTranslateSource;
     }
@@ -374,11 +381,16 @@ export function useTextTranslation(
       if (enabled.current) {
         observeTextNodes();
       }
-    } else if (providerChanged || targetLangChanged || showTranslateSourceChanged) {
+    } else if (
+      providerChanged ||
+      targetLangChanged ||
+      modelChanged ||
+      showTranslateSourceChanged
+    ) {
       updateTranslation();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bookKey, viewSettings, provider, targetLang]);
+  }, [bookKey, viewSettings, provider, targetLang, model]);
 
   useEffect(() => {
     if (!view || !enabled.current) return;

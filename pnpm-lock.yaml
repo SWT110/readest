@@ -278,6 +278,9 @@ importers:
       js-md5:
         specifier: ^0.8.3
         version: 0.8.3
+      js-mdict:
+        specifier: 6.0.8
+        version: 6.0.8
       jwt-decode:
         specifier: ^4.0.0
         version: 4.0.0
@@ -3968,6 +3971,12 @@ packages:
     cpu: [arm64]
     os: [darwin]
 
+  '@tursodatabase/database-linux-arm64-gnu@0.5.0':
+    resolution: {integrity: sha512-ifhBSd+o0ZGUvbOJUVZHEWq+soY1MQcWTRHR4BF8gKo4VG+83fWfNx9rY6Ag5LK/dMmwLvFE4i6els+wFuHsqg==}
+    cpu: [arm64]
+    os: [linux]
+    libc: [glibc]
+
   '@tursodatabase/database-linux-x64-gnu@0.5.0':
     resolution: {integrity: sha512-m+th09HazKbuQwaj9C2hPBE/5TWvBn6bQ2/YghrXog+mvmjeq1W/GXEpUP0BDUCiQwj//2p30WaNvicLe2VMfg==}
     cpu: [x64]
@@ -5232,6 +5241,10 @@ packages:
   commander@11.1.0:
     resolution: {integrity: sha512-yPVavfyCcRhmorC7rWlkHn15b4wDVgVmBA7kV4QVBsF7kv/9TKJAbAXVTxvTnwP8HHKjRCJDClKbciiYS7p0DQ==}
     engines: {node: '>=16'}
+
+  commander@13.1.0:
+    resolution: {integrity: sha512-/rFeCpNJQbhSZjGVwO9RFV3xPqbnERS8MmIQzCtD/zl6gpJuV/bMLuN92oG3F7d8oDEHHRrujSXNUr8fpjntKw==}
+    engines: {node: '>=18'}
 
   commander@14.0.3:
     resolution: {integrity: sha512-H+y0Jo/T1RZ9qPP4Eh1pkcQcLRglraJaSLoyOtHxu6AapkjWVCy2Sit1QQ4x3Dng8qDlSsZEet7g5Pq06MvTgw==}
@@ -6975,6 +6988,11 @@ packages:
   js-md5@0.8.3:
     resolution: {integrity: sha512-qR0HB5uP6wCuRMrWPTrkMaev7MJZwJuuw4fnwAzRgP4J4/F8RwtodOKpGp4XpqsLBFzzgqIO42efFAyz2Et6KQ==}
 
+  js-mdict@6.0.8:
+    resolution: {integrity: sha512-mIpK2JpkF0cJLCMv0p2JSzaJyQopplixMOvDEu2u2ktkmoRNqQedloAOycivxXhFtIi3T2EEIPky6XpnxX5CIA==}
+    engines: {node: '>=10.20.0'}
+    hasBin: true
+
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
 
@@ -7098,6 +7116,10 @@ packages:
   lead@4.0.0:
     resolution: {integrity: sha512-DpMa59o5uGUWWjruMp71e6knmwKU3jRBBn1kjuLWN9EeIOxNeSAwvHf03WIl8g/ZMR2oSQC9ej3yeLBwdDc/pg==}
     engines: {node: '>=10.13.0'}
+
+  levenshtein-edit-distance@3.0.1:
+    resolution: {integrity: sha512-/qMCkZbrAF7jZP/voqlkfNrBtEn0TMdhCK7OEBh/zb39t/c3wCnTjwU1ZvrMfQ3OxB8sBQXIpWRMM6FiQJVG3g==}
+    hasBin: true
 
   levn@0.4.1:
     resolution: {integrity: sha512-+bT2uH4E5LGE7h/n3evcS/sQlJXCpIp6ym8OWJ5eV6+67Dsql/LaaT7qJBAt2rzfoa/5QBGBhxDix1dMt2kQKQ==}
@@ -9636,6 +9658,7 @@ packages:
   whatwg-encoding@3.1.1:
     resolution: {integrity: sha512-6qN4hJdMwfYBtE3YBTTHhoeuUrDBPZmbQaxWAqSALV/MeEnR5z1xd8UKud2RAkFoPkmB+hli1TZSnyi84xz1vQ==}
     engines: {node: '>=18'}
+    deprecated: Use @exodus/bytes instead for a more spec-conformant and faster implementation
 
   whatwg-fetch@3.6.20:
     resolution: {integrity: sha512-EqhiFU6daOA8kpjOWTL0olhVOF3i7OrFzSYiGsEMB8GcXS+RrzauAERX65xMeNWVqxA6HXH2m69Z9LaKKdisfg==}
@@ -14084,6 +14107,9 @@ snapshots:
   '@tursodatabase/database-darwin-arm64@0.5.0':
     optional: true
 
+  '@tursodatabase/database-linux-arm64-gnu@0.5.0':
+    optional: true
+
   '@tursodatabase/database-linux-x64-gnu@0.5.0':
     optional: true
 
@@ -14104,6 +14130,7 @@ snapshots:
       '@tursodatabase/database-common': 0.5.0
     optionalDependencies:
       '@tursodatabase/database-darwin-arm64': 0.5.0
+      '@tursodatabase/database-linux-arm64-gnu': 0.5.0
       '@tursodatabase/database-linux-x64-gnu': 0.5.0
       '@tursodatabase/database-win32-x64-msvc': 0.5.0
 
@@ -15593,6 +15620,8 @@ snapshots:
   comma-separated-tokens@2.0.3: {}
 
   commander@11.1.0: {}
+
+  commander@13.1.0: {}
 
   commander@14.0.3: {}
 
@@ -17764,6 +17793,11 @@ snapshots:
 
   js-md5@0.8.3: {}
 
+  js-mdict@6.0.8:
+    dependencies:
+      commander: 13.1.0
+      levenshtein-edit-distance: 3.0.1
+
   js-tokens@4.0.0: {}
 
   js-tokens@9.0.1: {}
@@ -17897,6 +17931,8 @@ snapshots:
       readable-stream: 2.3.8
 
   lead@4.0.0: {}
+
+  levenshtein-edit-distance@3.0.1: {}
 
   levn@0.4.1:
     dependencies:

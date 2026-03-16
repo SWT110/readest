@@ -11,6 +11,7 @@ export interface TranslationProvider {
     targetLang: string,
     token?: string | null,
     useCache?: boolean,
+    model?: string,
   ) => Promise<string[]>;
 }
 
@@ -22,6 +23,7 @@ export interface UseTranslatorOptions {
   provider?: TranslatorName;
   sourceLang?: string;
   targetLang?: string;
+  model?: string;
   enablePolishing?: boolean;
   enablePreprocessing?: boolean;
 }

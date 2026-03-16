@@ -15,6 +15,7 @@ import { useLibraryStore } from '@/store/libraryStore';
 import { useTrafficLight } from '@/hooks/useTrafficLight';
 import { useResponsiveSize } from '@/hooks/useResponsiveSize';
 import { debounce } from '@/utils/debounce';
+import { formatReadingDuration } from '@/utils/readingStats';
 import useShortcuts from '@/hooks/useShortcuts';
 import WindowButtons from '@/components/WindowButtons';
 import Dropdown from '@/components/Dropdown';
@@ -50,7 +51,7 @@ const LibraryHeader: React.FC<LibraryHeaderProps> = ({
   const searchParams = useSearchParams();
   const { appService } = useEnv();
   const { systemUIVisible, statusBarHeight } = useThemeStore();
-  const { currentBookshelf } = useLibraryStore();
+  const { currentBookshelf, library } = useLibraryStore();
   const { isTrafficLightVisible } = useTrafficLight();
   const [searchQuery, setSearchQuery] = useState(searchParams?.get('q') ?? '');
 
@@ -85,6 +86,12 @@ const LibraryHeader: React.FC<LibraryHeaderProps> = ({
   const windowButtonVisible = appService?.hasWindowBar && !isTrafficLightVisible;
   const currentBooksCount = currentBookshelf.reduce(
     (acc, item) => acc + ('books' in item ? item.books.length : 1),
+    0,
+  );
+  const totalReadingTimeMs = library.reduce(
+    (sum, book) =>
+      sum +
+      (book.deletedAt ? 0 : (book.readingTimeMs ?? book.metadata?.readingStats?.readingTimeMs ?? 0)),
     0,
   );
 
@@ -199,6 +206,9 @@ const LibraryHeader: React.FC<LibraryHeaderProps> = ({
           </div>
         ) : (
           <div className='flex h-full items-center gap-x-2 sm:gap-x-4'>
+            <div className='text-base-content/65 hidden whitespace-nowrap text-xs lg:block'>
+              {_('Reading {{time}}', { time: formatReadingDuration(totalReadingTimeMs) })}
+            </div>
             <Dropdown
               label={_('View Menu')}
               className='exclude-title-bar-mousedown dropdown-bottom dropdown-end'

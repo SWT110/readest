@@ -11,6 +11,7 @@ export function useTranslator({
   provider = 'deepl',
   sourceLang = 'AUTO',
   targetLang = 'EN',
+  model,
   enablePolishing = true,
   enablePreprocessing = true,
 }: UseTranslatorOptions = {}) {
@@ -96,6 +97,7 @@ export function useTranslator({
           targetLanguage,
           token,
           useCache,
+          model,
         );
 
         await Promise.all(
@@ -153,7 +155,7 @@ export function useTranslator({
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [selectedProvider, sourceLang, targetLang, translator, token],
+    [model, selectedProvider, sourceLang, targetLang, translator, token],
   );
 
   return {

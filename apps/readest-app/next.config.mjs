@@ -3,6 +3,7 @@ import withBundleAnalyzer from '@next/bundle-analyzer';
 
 const isDev = process.env['NODE_ENV'] === 'development';
 const appPlatform = process.env['NEXT_PUBLIC_APP_PLATFORM'];
+const dockerBuild = process.env['DOCKER_BUILD'] === 'true';
 
 if (isDev) {
   const { initOpenNextCloudflareForDev } = await import('@opennextjs/cloudflare');
@@ -15,7 +16,7 @@ const exportOutput = appPlatform !== 'web' && !isDev;
 const nextConfig = {
   // Ensure Next.js uses SSG instead of SSR
   // https://nextjs.org/docs/pages/building-your-application/deploying/static-exports
-  output: exportOutput ? 'export' : undefined,
+  output: exportOutput ? 'export' : dockerBuild && !isDev ? 'standalone' : undefined,
   pageExtensions: exportOutput ? ['jsx', 'tsx'] : ['js', 'jsx', 'ts', 'tsx'],
   // Note: This feature is required to use the Next.js Image component in SSG mode.
   // See https://nextjs.org/docs/messages/export-image-api for different workarounds.

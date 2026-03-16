@@ -1,0 +1,1431 @@
+@namespace url("http://www.w3.org/1999/xhtml");
+@namespace p url("Edi");
+@font-face {
+    font-family: "DictBats";
+    src: url("font/DictBats.ttf");
+}
+
+
+/* CSS for students2e cdrom */
+
+block-g {
+    display: block;
+    indent: 0;
+}
+
+picture-g {
+    display: block;
+    margin-left: 6.5mm;
+    margin-top: 12pt;
+    /* fix for IDM mantis 33875 - pics too close to text above */
+}
+
+a {
+    font-weight: bold;
+    text-decoration: none;
+}
+
+clpara {
+    color: #660066;
+    display: block;
+    font-weight: bold;
+    margin-top: 2mm;
+}
+
+d[display="inline"] {
+    display: inline;
+    font-size: 105%;
+    margin-left: 0mm;
+}
+
+n0-g>d {
+    margin-left: 0mm;
+}
+
+label-g[display="block"],
+ifs-g,
+d {
+    display: block;
+    font-size: 105%;
+    margin-bottom: 1mm;
+    margin-left: 6.5mm;
+}
+
+if>eb {
+    text-decoration: underline;
+}
+
+x>eb {
+    color: #003366;
+}
+
+eb {
+    font-weight: bold;
+}
+
+ebblue {
+    color: #660066;
+    font-weight: bold;
+}
+
+entry {
+    background-color: #FFFFEE;
+    display: block;
+    font-family: Verdana;
+    font-size: 13px;
+    margin-top: 3mm;
+    line-height: 130%;
+}
+
+gram-g {
+    display: block;
+    margin-left: 8mm;
+    margin-top: 1mm;
+}
+
+hwd-g {
+    display: block;
+    margin-left: 8.5mm;
+    text-indent: -8.5mm;
+}
+
+id-g,
+pv-g {
+    display: block;
+    margin-left: 3mm;
+    margin-top: 1mm;
+}
+
+ids-g,
+pvs-g {
+    display: block;
+    margin-left: 3mm;
+    margin-top: 3mm;
+}
+
+cf {
+    text-indent: 0;
+}
+
+n-g>cf {
+    text-indent: 6mm;
+}
+
+id-g>n-g {
+    margin-left: 0mm;
+}
+
+pv-g>n-g {
+    margin-left: 0mm;
+}
+
+n-g {
+    display: block;
+    margin-left: 2mm;
+    margin-top: 1mm;
+}
+
+n0-g {
+    display: block;
+    margin-left: 8mm;
+}
+
+infl {
+    display: none;
+}
+
+
+/* text formatting: */
+
+h,
+h2 {
+    color: #660066;
+    font-family: Verdana;
+    font-size: 130%;
+    font-weight: bold;
+    padding-left: 3mm;
+}
+
+h2 {
+    display: inline;
+}
+
+heading {
+    display: block;
+    font-size: 120%;
+    font-weight: bold;
+    margin-top: 2mm;
+}
+
+hm {
+    color: #660066;
+    font-family: Verdana;
+    font-size: 85%;
+    font-weight: bold;
+    vertical-align: super;
+}
+
+alt,
+ab,
+cf,
+dr,
+id,
+if,
+pv,
+sym,
+v,
+ve,
+vs,
+wfo,
+wfw,
+zd {
+    color: #660066;
+    font-family: Verdana;
+    font-size: 100%;
+    font-weight: bold;
+}
+
+cm,
+ei,
+z_g,
+z_il,
+z_it,
+z_r {
+    color: black;
+    font-style: italic;
+}
+
+eb_in_d,
+eb_in_un {
+    font-style: normal;
+    font-weight: bold;
+}
+
+eb_in_x {
+    font-size: 12px;
+    font-style: italic;
+    font-weight: bold;
+}
+
+clpara>er {
+    color: black;
+}
+
+er {
+    font-style: normal;
+    font-weight: normal;
+}
+
+esu {
+    vertical-align: super;
+}
+
+ff {
+    color: #660066;
+    font-weight: bold;
+}
+
+hwd {
+    color: #003366;
+    font-weight: bold;
+}
+
+i,
+y {
+    font-family: DictBats;
+    font-size: 130%;
+    font-style: normal;
+}
+
+np {
+    display: block;
+}
+
+revout {
+    background-color: #000099;
+    color: white;
+    font-family: Verdana;
+    font-variant: small-caps;
+    font-style: normal;
+    font-weight: bold;
+    margin-top: 3mm;
+    padding-left: 0.25mm;
+    padding-right: 0.5mm;
+}
+
+s {
+    color: #660066;
+    font-weight: bold;
+    font-variant: small-caps;
+}
+
+u[display="inline"] {
+    display: inline;
+    margin-left: 0mm;
+}
+
+u {
+    display: inline;
+    text-decoration: none;
+}
+
+dr-g {
+    display: block;
+}
+
+inote {
+    display: block;
+    margin-left: 6mm;
+    margin-top: 2mm;
+}
+
+hwd-g>un[un="misc"] {
+    display: block;
+    margin-left: 6mm;
+}
+
+h-g>un[un="misc"] {
+    display: block;
+    margin-left: 6mm;
+}
+
+h-g>un[un="info"] {
+    display: block;
+    margin-left: 6mm;
+}
+
+id-g>un[un="misc"] {
+    display: block;
+    margin-left: 6mm;
+}
+
+id-g>un[un="info"] {
+    display: block;
+    margin-left: +3mm;
+}
+
+pv-g>un[un="misc"] {
+    display: block;
+    margin-left: 6mm;
+}
+
+n-g>un[un="misc"] {
+    display: block;
+    margin-left: 6mm;
+}
+
+n-g>un[un="info"] {
+    display: block;
+    margin-left: +3mm;
+}
+
+n0-g>un[un="info"] {
+    display: block;
+    margin-left: 6mm;
+}
+
+n-g>un {
+    margin-left: 0mm;
+}
+
+gram-g>un {
+    margin-left: 1mm;
+    padding-left: 0mm;
+}
+
+un[un="driv"] {
+    background-color: #FFFFEE;
+    border: none;
+    margin-bottom: 0mm;
+    margin-top: 0mm;
+    padding-bottom: 0mm;
+}
+
+un[un="help"] {
+    background-color: #FFFFEE;
+    border: none;
+    margin-bottom: 0mm;
+    margin-top: 0mm;
+    padding-bottom: 0mm;
+}
+
+dr-g>n0-g>un[un="info"] {
+    margin-left: -5mm;
+}
+
+un[un="info"] {
+    background-color: #FFFFEE;
+    border: none;
+    margin-bottom: 0mm;
+    margin-left: -6mm;
+    margin-top: 0mm;
+    padding-bottom: 0mm;
+}
+
+un[box="n"] {
+    background-color: #FFFFEE;
+    border: none;
+    display: inline;
+    margin-bottom: 0mm;
+    margin-left: 0mm;
+    margin-top: 0mm;
+    max-width: none;
+    padding-bottom: 0mm;
+    padding-left: 0mm;
+}
+
+un {
+    background-color: #ddffff;
+    border: thin solid;
+    border-color: black;
+    display: block;
+    margin-bottom: 5mm;
+    margin-left: 9mm;
+    margin-top: 5mm;
+    max-width: 100mm;
+    padding: 1mm;
+    padding-left: 3mm;
+    padding-bottom: 2mm;
+}
+
+wf-g {
+    border: thin solid;
+    border-color: black;
+    display: block;
+    margin-bottom: 5mm;
+    margin-left: 9mm;
+    margin-top: 5mm;
+    max-width: 100mm;
+    padding: 1mm;
+    padding-left: 3mm;
+    padding-bottom: 2mm;
+}
+
+wfw-g {
+    display: block;
+}
+
+n0-g>x {
+    margin-left: 0mm;
+}
+
+x-g {
+    /*  display: block; */
+    display: list-item;
+    color: #003366;
+    font-size: 105%;
+    font-style: italic;
+    list-style-type: square;
+    /* changed TT 2012-08-20  value changed from "bullet" - not a valid value. */
+    margin-left: 10mm;
+    margin-top: 0.5mm;
+    margin-bottom: 1mm;
+}
+
+hwd-g>x-g {
+    text-indent: 0mm;
+    /* changed TT 2012-08-20 Prevents list bullet appearing in middle of words - IDM mantis 0033915 */
+}
+
+xh {
+    font-style: normal;
+    font-weight: bold;
+}
+
+xh[display="smallcaps"] {
+    font-variant: small-caps;
+    font-weight: normal;
+}
+
+xhm {
+    font-size: 85%;
+    vertical-align: super;
+}
+
+xpara {
+    display: block;
+    font-style: italic;
+    margin-left: 10mm;
+}
+
+n0-g>xr-g,
+n-g>xr-g {
+    /*  margin-left: 0mm; */
+    /* commented out to align xr-g as requested in IDM mantis issue 33900  */
+}
+
+label-g[display="inline"]+xr-g {
+    display: inline;
+    /* mantis 33901 - xr-g following inline label should follow on from label */
+    margin-left: 0;
+    /* mantis 33901 - xr-g following inline label should follow on from label */
+}
+
+xr-g {
+    display: block;
+    margin-left: 6mm;
+    margin-top: 1mm;
+}
+
+z_arrow[display="indent"] {
+    padding-left: 6mm;
+}
+
+z_awsym {
+    color: #000099;
+    font-variant: small-caps;
+    font-weight: bold;
+}
+
+z_drsym {
+    color: #660066;
+    font-size: 140%;
+    padding-right: 1mm;
+    vertical-align: sub;
+}
+
+z_idsym,
+z_idsyms,
+z_pvsym,
+z_pvsyms {
+    margin-left: 3mm;
+    margin-top: 2mm;
+    display: block;
+}
+
+z_n {
+    color: #000099;
+    font-family: Verdana;
+    font-size: 100%;
+    font-style: normal;
+    font-weight: bold;
+    padding-right: 1mm;
+    text-align: right;
+}
+
+z_n+*
+/* generic fix - elements following <zn> (sense number) should not have left margin (padding right on z_n gives space), and should display inline */
+
+{
+    margin-left: 0 !important;
+    /* TT anything following <zn> (sense number) should not have left margin */
+    display: inline !important;
+    /* TT anything following <zn> (sense number) should display inline */
+}
+
+wfw-g>z_p {
+    font-weight: normal;
+}
+
+z_p {
+    font-size: 12px;
+    font-style: italic;
+    font-weight: bold;
+}
+
+z_s {
+    color: #660066;
+    font-variant: small-caps;
+}
+
+un[un="driv"]>z_unsym {
+    display: inline;
+}
+
+un[un="help"]>z_unsym {
+    display: inline;
+}
+
+z_unsym {
+    margin-bottom: 1mm;
+    display: block;
+}
+
+z_xr-g {
+    font-style: italic;
+}
+
+un,
+unbox {
+    display: block;
+    margin-left: 0em;
+    text-indent: 0.0em;
+    margin-top: 0.5em;
+    /*  background-color: rgb(186, 202, 211); */
+    background-color: #D2E9FF;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-bottom: 8pt;
+    padding-top: 8pt;
+    /*  width: 500px; */
+    width: 80%;
+    font-family: Verdana, sans-serif;
+}
+
+boxheading {
+    font-style: normal;
+    font-variant: small-caps;
+    font-weight: bold;
+    color: Black;
+    display: block;
+}
+
+[display="inline"] {
+    display: inline;
+}
+
+[display="block"] {
+    display: block;
+}
+
+z_n+ifs-g {
+    margin-left: 0;
+    /* tt: fix for mantis issue: 0033880: Comparative/Superlative information indented
+Description	 Comparative/Superlative information indented at entry 'able' (sense 2)  */
+}
+
+
+/* IDM code follows ... */
+
+
+/*
+div.skVlistItem[active='true'] {
+    -moz-user-select: text !important;
+    -moz-border-radius: 8px;
+    border: 6px solid;
+    border-left: 4px solid;
+    border-top: 4px solid;
+    -moz-border-top-colors: transparent transparent transparent #8282ba;
+    -moz-border-right-colors: #F8F8F8 #EAEAEA #D4D4D4 #B7B7B7 #A2A2A2 #8282ba;
+    -moz-border-bottom-colors: #F8F8F8 #EAEAEA #D4D4D4 #B7B7B7 #A2A2A2 #8282ba;
+    -moz-border-left-colors: transparent transparent #F8F8F8 #8282ba;
+    background-color: #FFFFE7;
+}
+
+
+div.skVlistItem {
+    font-family: verdana;
+    font-size: 10pt;
+    padding-left: 13px;
+    margin-left: -3px;
+    color: #000080;
+    background-color: #fefefe;
+    -moz-border-radius: 8px;
+    border: 6px solid;
+    border-left: 4px solid;
+    border-top: 4px solid;
+    -moz-border-top-colors: transparent transparent transparent transparent;
+    -moz-border-right-colors: transparent transparent transparent transparent transparent transparent;
+    -moz-border-bottom-colors: transparent transparent transparent transparent transparent transparent;
+    -moz-border-left-colors: transparent transparent transparent transparent; } 
+*/
+
+.big_pic {
+    display: none;
+}
+
+index ref {
+    display: block;
+}
+
+.wordfinder subhd {
+    color: red;
+    display: block;
+    font-family: Verdana, sans-serif;
+    font-size: 12pt;
+    font-weight: 700;
+    padding-top: 8pt
+}
+
+.wordfinder more_head {
+    color: red;
+    display: block;
+    font-family: Verdana, sans-serif;
+    font-size: 12pt;
+    font-weight: 700;
+    padding-top: 8pt
+}
+
+.wordfinder defshead {
+    color: #007ac4;
+    display: block;
+    font-family: Verdana, sans-serif;
+    font-size: 12pt;
+    font-weight: 700
+}
+
+.wordfinder block-g {
+    background-color: #bacad3;
+    display: block;
+    line-height: 8mm;
+    height: 8mm;
+    margin-top: 1mm;
+    margin-left: -16px;
+    padding-left: 32px
+}
+
+.wordfinder para {
+    display: block;
+    text-indent: 0;
+    font-family: Verdana, sans-serif;
+    font-size: 11pt
+}
+
+.wordfinder box_heading {
+    font-style: normal;
+    font-variant: small-caps;
+    font-weight: 700;
+    color: #fff
+}
+
+.wordfinder subhead {
+    font-family: Verdana, sans-serif;
+    font-style: normal;
+    font-size: 13pt;
+    font-weight: 400;
+    padding-top: 4mm;
+    padding-bottom: 1mm
+}
+
+.wordfinder table {
+    margin-top: 4mm;
+    margin-bottom: 4mm
+}
+
+.wordfinder td {
+    font-family: Verdana, sans-serif;
+    font-size: 11pt
+}
+
+.wordfinder th {
+    font-family: Verdana, sans-serif;
+    font-size: 11pt;
+    font-weight: 700;
+    padding-bottom: 2mm
+}
+
+.wordfinder title {
+    font-family: Verdana, sans-serif;
+    font-size: 14pt;
+    font-weight: 700
+}
+
+.wordfinder title {
+    display: block;
+    font-family: Verdana, sans-serif;
+    font-size: 12pt;
+    font-style: normal;
+    font-weight: 700
+}
+
+.wordfinder box {
+    display: block;
+    background-color: #ffc;
+    margin-top: 1mm;
+    margin-left: -16px;
+    padding-left: 32px;
+    border: 2px solid #ffc
+}
+
+.wordfinder ndx {
+    display: block;
+    color: red
+}
+
+.wordfinder d,
+.wordfinder defs,
+.wordfinder un,
+.wordfinder z_xr {
+    color: #000
+}
+
+.wordfinder a,
+.wordfinder ab,
+.wordfinder ait,
+.wordfinder aitb,
+.wordfinder alt,
+.wordfinder ar,
+.wordfinder b,
+.wordfinder bf,
+.wordfinder co,
+.wordfinder dr,
+.wordfinder dre,
+.wordfinder fe,
+.wordfinder fr,
+.wordfinder h,
+.wordfinder heading,
+.wordfinder hm,
+.wordfinder hs,
+.wordfinder id,
+.wordfinder id-dupe,
+.wordfinder if,
+.wordfinder ndv,
+.wordfinder pfv,
+.wordfinder pv,
+.wordfinder sym,
+.wordfinder syn,
+.wordfinder tcfe,
+.wordfinder tdef,
+.wordfinder v,
+.wordfinder v2,
+.wordfinder v_blue,
+.wordfinder vc,
+.wordfinder ve,
+.wordfinder vp,
+.wordfinder vr,
+.wordfinder vs,
+.wordfinder vs_blue,
+.wordfinder xr[xt=andv] * xh,
+.wordfinder xr[xt=ast] * xh,
+.wordfinder xr[xt=ndv] * xh,
+.wordfinder z_core_h {
+    color: #0000b2
+}
+
+.wordfinder a,
+.wordfinder dlf,
+.wordfinder dnca,
+.wordfinder dncn,
+.wordfinder dnov,
+.wordfinder dnsv,
+.wordfinder ds,
+.wordfinder dsyn,
+.wordfinder dtxt,
+.wordfinder dvcadv,
+.wordfinder g,
+.wordfinder gr,
+.wordfinder gr_br,
+.wordfinder il,
+.wordfinder label-g,
+.wordfinder pt,
+.wordfinder r,
+.wordfinder r_it,
+.wordfinder subject,
+.wordfinder tel,
+.wordfinder tg,
+.wordfinder treg,
+.wordfinder xp,
+.wordfinder z_a,
+.wordfinder z_ab,
+.wordfinder z_dlf,
+.wordfinder z_ds,
+.wordfinder z_g,
+.wordfinder z_gr,
+.wordfinder z_gr_br,
+.wordfinder z_il,
+.wordfinder z_label,
+.wordfinder z_r,
+.wordfinder z_r_it,
+.wordfinder z_s,
+.wordfinder z_tg,
+.wordfinder z_treg,
+.wordfinder z_vs-g {
+    color: #099
+}
+
+.wordfinder alt,
+.wordfinder cc,
+.wordfinder cf,
+.wordfinder lglet,
+.wordfinder xs,
+.wordfinder xw,
+.wordfinder z_n,
+.wordfinder z_phon-gb,
+.wordfinder z_til,
+.wordfinder zn {
+    color: #0000b2
+}
+
+.wordfinder sd,
+.wordfinder t2,
+.wordfinder tcf,
+.wordfinder tcfe,
+.wordfinder tid,
+.wordfinder tif,
+.wordfinder ts,
+.wordfinder tx,
+.wordfinder uncomp,
+.wordfinder xh,
+.wordfinder xhm,
+.wordfinder z_phon-us {
+    color: #0000b2
+}
+
+.wordfinder x {
+    color: #00f
+}
+
+.wordfinder pos {
+    color: maroon
+}
+
+.wordfinder * {
+    background-color: transparent
+}
+
+.wordfinder hide[type=id_skeleton],
+.wordfinder hide[type=pv_skeleton],
+.wordfinder pracpron,
+.wordfinder spx-g,
+.wordfinder vps-g {
+    display: none
+}
+
+.wordfinder [display=block] {
+    display: block
+}
+
+.wordfinder bf-g,
+.wordfinder bfs-g,
+.wordfinder cf-g,
+.wordfinder dr-g,
+.wordfinder dr-g>vs-g,
+.wordfinder ei-g,
+.wordfinder entry,
+.wordfinder heading,
+.wordfinder i-g,
+.wordfinder id-g,
+.wordfinder id-help,
+.wordfinder idg-dupe,
+.wordfinder ids-g,
+.wordfinder ifs-g,
+.wordfinder ipa_block,
+.wordfinder l-g,
+.wordfinder label-g,
+.wordfinder n-g,
+.wordfinder p-g,
+.wordfinder para,
+.wordfinder pos-g,
+.wordfinder pv-g,
+.wordfinder pvs-g,
+.wordfinder sd-g,
+.wordfinder sense-g,
+.wordfinder syn-g,
+.wordfinder tcfe,
+.wordfinder tid,
+.wordfinder top-g,
+.wordfinder ts-g,
+.wordfinder tx,
+.wordfinder un,
+.wordfinder unbox,
+.wordfinder vs-g,
+.wordfinder x-g,
+.wordfinder xr-g,
+.wordfinder z_side_panel {
+    display: block
+}
+
+.wordfinder bf-g,
+.wordfinder cf-g,
+.wordfinder d[display=block],
+.wordfinder ei-g,
+.wordfinder id-g,
+.wordfinder id-help,
+.wordfinder idg-dupe,
+.wordfinder ids-g,
+.wordfinder ifs-g,
+.wordfinder ipa_block,
+.wordfinder l-g,
+.wordfinder label-g,
+.wordfinder p-g,
+.wordfinder para,
+.wordfinder pos-g,
+.wordfinder pv-g,
+.wordfinder pvs-g,
+.wordfinder sd-g,
+.wordfinder sense-g,
+.wordfinder syn-g,
+.wordfinder tcfe,
+.wordfinder tid,
+.wordfinder ts-g,
+.wordfinder un,
+.wordfinder vs-g,
+.wordfinder xr-g {
+    text-indent: 0
+}
+
+.wordfinder [display=bold] {
+    font-weight: 700
+}
+
+.wordfinder [display=inline] {
+    display: inline
+}
+
+.wordfinder [pad=top] {
+    padding-top: 2mm
+}
+
+.wordfinder [pad="y"] {
+    padding-left: 2mm
+}
+
+.wordfinder entry {
+    padding-right: 20px;
+    color: #000;
+    font-family: Helvetica;
+    font-size: 12pt;
+    line-height: 18pt;
+    padding-left: 8pt;
+    padding-right: 8pt;
+    padding-bottom: 1pt;
+    padding-top: 8pt;
+    -webkit-touch-callout: none
+}
+
+.wordfinder entry[stress="y"] {
+    text-indent: -12px!important
+}
+
+.wordfinder cm,
+.wordfinder d,
+.wordfinder da,
+.wordfinder dab,
+.wordfinder dc,
+.wordfinder defs,
+.wordfinder dh,
+.wordfinder dhs,
+.wordfinder ds,
+.wordfinder dst,
+.wordfinder eh,
+.wordfinder er,
+.wordfinder etym,
+.wordfinder ff,
+.wordfinder gl,
+.wordfinder ndv,
+.wordfinder pt,
+.wordfinder t2,
+.wordfinder tcfe,
+.wordfinder tid,
+.wordfinder tif,
+.wordfinder ts,
+.wordfinder ud,
+.wordfinder xs,
+.wordfinder z,
+.wordfinder z_a,
+.wordfinder z_ab,
+.wordfinder z_gr,
+.wordfinder z_gr_br,
+.wordfinder z_spc_post,
+.wordfinder z_spc_pre,
+.wordfinder z_xr {
+    font-family: Helvetica;
+    font-size: 12pt;
+    font-style: normal;
+    font-weight: 400
+}
+
+.wordfinder a,
+.wordfinder ab,
+.wordfinder alt,
+.wordfinder ar,
+.wordfinder bf,
+.wordfinder cc,
+.wordfinder cf,
+.wordfinder co,
+.wordfinder db,
+.wordfinder dhb,
+.wordfinder dr,
+.wordfinder dre,
+.wordfinder eb,
+.wordfinder fm,
+.wordfinder fr,
+.wordfinder id,
+.wordfinder id-dupe,
+.wordfinder if,
+.wordfinder lglet,
+.wordfinder pfv,
+.wordfinder pv,
+.wordfinder sym,
+.wordfinder syn,
+.wordfinder unbox>eb,
+.wordfinder v,
+.wordfinder v2,
+.wordfinder v_blue,
+.wordfinder vc,
+.wordfinder ve,
+.wordfinder vp,
+.wordfinder vr,
+.wordfinder vs,
+.wordfinder vs_blue,
+.wordfinder xh,
+.wordfinder xw,
+.wordfinder z_n,
+.wordfinder zn {
+    font-family: Helvetica;
+    font-size: 12pt;
+    font-style: normal;
+    font-weight: 700
+}
+
+.wordfinder dr {
+    font-family: Helvetica;
+    font-size: 14pt;
+    font-style: normal;
+    font-weight: 700
+}
+
+.wordfinder dlf,
+.wordfinder dnca,
+.wordfinder dncn,
+.wordfinder dnov,
+.wordfinder dnsv,
+.wordfinder dsyn,
+.wordfinder dtxt,
+.wordfinder dvcadv,
+.wordfinder ei,
+.wordfinder it,
+.wordfinder tam,
+.wordfinder tamb,
+.wordfinder tel,
+.wordfinder x,
+.wordfinder xp,
+.wordfinder z_dlf,
+.wordfinder z_ds,
+.wordfinder z_il,
+.wordfinder z_phon-gb,
+.wordfinder z_phon-us,
+.wordfinder z_r,
+.wordfinder z_r_it,
+.wordfinder z_s,
+.wordfinder z_tg,
+.wordfinder z_til {
+    font-family: Helvetica;
+    font-size: 12pt;
+    font-style: italic;
+    font-weight: 400
+}
+
+.wordfinder ait,
+.wordfinder aitb,
+.wordfinder di,
+.wordfinder eb_in_x,
+.wordfinder pos {
+    font-family: Helvetica;
+    font-style: italic;
+    font-size: 12pt;
+    font-weight: 700
+}
+
+.wordfinder fe,
+.wordfinder h {
+    font-family: Helvetica;
+    font-size: 17pt;
+    font-weight: 700;
+    line-height: 115%
+}
+
+.wordfinder hm {
+    font-family: Helvetica;
+    font-size: 10pt;
+    font-weight: 700;
+    vertical-align: 40%
+}
+
+.wordfinder hs {
+    font-family: Helvetica;
+    font-size: 17pt;
+    font-weight: 400
+}
+
+.wordfinder Ref>pos,
+.wordfinder eul,
+.wordfinder ul,
+.wordfinder xh {
+    text-decoration: underline
+}
+
+.wordfinder ifs-g>ei-g,
+.wordfinder n-g>vs-g,
+.wordfinder vs-g>ei-g {
+    display: inline
+}
+
+.wordfinder cl {
+    font-style: italic;
+    font-weight: 700
+}
+
+.wordfinder dr-g,
+.wordfinder p-g {
+    padding-top: 6px;
+    margin-top: 6px
+}
+
+.wordfinder esu {
+    vertical-align: 30%
+}
+
+.wordfinder h[type=title] {
+    font-style: italic
+}
+
+.wordfinder hsrch {
+    display: none
+}
+
+.wordfinder i {
+    font-style: normal
+}
+
+.wordfinder bfs-g {
+    margin-top: 12px
+}
+
+.wordfinder bf-g[core="y"]>def_block,
+.wordfinder id-g[core="y"]>def_block,
+.wordfinder idg-dupe[core="y"]>def_block {
+    padding-left: 16px
+}
+
+.wordfinder n-g>ifs-g {
+    display: inline
+}
+
+.wordfinder infl {
+    display: none
+}
+
+.wordfinder ipa_block {
+    padding-top: 1mm;
+    text-indent: 0
+}
+
+.wordfinder dr-g,
+.wordfinder entry,
+.wordfinder n-g {
+    padding-top: 1.5mm;
+    text-indent: -12px;
+    margin-left: 12px
+}
+
+.wordfinder n-g[core="y"]>x-g {
+    padding-left: 16px;
+    text-indent: 0
+}
+
+.wordfinder n-g[core="y"]>z_n {
+    padding-left: 2.5mm
+}
+
+.wordfinder p-g {
+    text-indent: -8px
+}
+
+.wordfinder pv-g {
+    padding-top: 1.5mm;
+    padding-bottom: 2px
+}
+
+.wordfinder pv-g[core="y"]>def_block {
+    padding-left: 16px
+}
+
+.wordfinder pv-g[core="y"]>x-g {
+    padding-left: 16px;
+    text-indent: 0
+}
+
+.wordfinder pv-g[core="y"] {
+    padding-left: 16px;
+    text-indent: -48px
+}
+
+.wordfinder pvs-g {
+    margin-top: 14px
+}
+
+.wordfinder heading {
+    font-size: 16pt;
+    font-family: "DejaVu Sans", sans-serif;
+    font-style: normal;
+    font-variant: small-caps;
+    font-weight: 700;
+    padding-left: 1mm
+}
+
+.wordfinder revout,
+.wordfinder tab {
+    background-color: #0000b2;
+    font-size: 10pt;
+    font-family: "DejaVu Sans", sans-serif;
+    padding-top: 1pt;
+    font-style: normal;
+    font-variant: small-caps;
+    font-weight: 700;
+    color: #fff;
+    margin-top: 2mm;
+    padding-left: 1mm;
+    padding-right: 1mm
+}
+
+.wordfinder sd-g {
+    margin-top: 14px
+}
+
+.wordfinder sd,
+.wordfinder z_side_panel {
+    font-family: Helvetica;
+    font-size: 14pt;
+    font-variant: small-caps;
+    font-weight: 700;
+    text-indent: -12px
+}
+
+.wordfinder syn-g {
+    margin-bottom: 3mm;
+    margin-top: 3mm;
+    margin-left: 14px
+}
+
+.wordfinder top-g {
+    line-height: 115%
+}
+
+.wordfinder bf-g,
+.wordfinder id-g,
+.wordfinder idg-dupe,
+.wordfinder pv-g,
+.wordfinder un,
+.wordfinder unbox {
+    padding-top: 1.5mm;
+    padding-bottom: 8px;
+    padding-right: 20px;
+    padding-left: 2px;
+    width: 80%
+}
+
+.wordfinder bf-g,
+.wordfinder id-g,
+.wordfinder idg-dupe,
+.wordfinder pv-g {
+    background-color: #ffc;
+    margin-top: .5em
+}
+
+.wordfinder un,
+.wordfinder unbox {
+    padding-left: 20px;
+    margin-left: 0;
+    text-indent: 0;
+    margin-top: .5em;
+    background-color: #bfbffe;
+    font-family: Verdana, sans-serif;
+    font-size: 11pt
+}
+
+.wordfinder wx {
+    font-style: italic;
+    padding-left: 2mm
+}
+
+.wordfinder wx {
+    text-decoration: line-through
+}
+
+.wordfinder x-g {
+    text-indent: 0
+}
+
+.wordfinder xhm {
+    font-family: Helvetica;
+    font-size: 10pt;
+    font-weight: 400;
+    vertical-align: 30%
+}
+
+.wordfinder y {
+    font-style: normal
+}
+
+.wordfinder z_g,
+.wordfinder z_il {
+    font-family: Helvetica;
+    font-style: italic;
+    font-size: 12pt
+}
+
+.wordfinder z_n,
+.wordfinder zn {
+    padding-right: .5mm
+}
+
+.wordfinder dlf,
+.wordfinder dnca,
+.wordfinder dncn,
+.wordfinder dnov,
+.wordfinder dnsv,
+.wordfinder dsyn,
+.wordfinder dtxt,
+.wordfinder dvcadv,
+.wordfinder tel,
+.wordfinder z_dlf,
+.wordfinder z_ds,
+.wordfinder z_il,
+.wordfinder z_r,
+.wordfinder z_r_it,
+.wordfinder z_s,
+.wordfinder z_tg {
+    display: inline
+}
+
+.wordfinder z_sub {
+    vertical-align: -30%
+}
+
+.wordfinder z_sup {
+    vertical-align: 30%
+}
+
+.wordfinder z_vs-g {
+    font-style: normal;
+    font-size: 12pt
+}
+
+.wordfinder x-g {
+    display: inline;
+}
+
+.wordfinder x-g::before {}
+
+.wordfinder x::before {
+    content: '▪ ';
+}
+
+.wordfinder x {
+    display: table;
+    padding-left: 28px;
+}
+
+img[src="file://img/sdsym.png"] {
+    display: none;
+}
+
+xr[xt=arrow]::before {
+    content: '➯';
+}
+
+.wordfinder {
+    font-size: 18px;
+    font-weight: 600;
+    color: #0000b2;
+}
+
+.wordfinder p {
+    font-weight: 500;
+    color: black;
+}
+
+.wordfinder note {
+    font-weight: 500;
+    color: black;
+}
+
+inref p {
+    display: inline;
+}
+
+inref p::before {
+    content: '\A';
+    white-space: pre;
+}

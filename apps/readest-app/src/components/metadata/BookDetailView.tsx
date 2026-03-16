@@ -23,6 +23,7 @@ import {
   formatPublisher,
   formatTitle,
 } from '@/utils/book';
+import { formatReadingDuration, getBookReadingStats } from '@/utils/readingStats';
 import { saveSysSettings } from '@/helpers/settings';
 import BookCover from '@/components/BookCover';
 import Dropdown from '../Dropdown';
@@ -56,6 +57,7 @@ const BookDetailView: React.FC<BookDetailViewProps> = ({
   const _ = useTranslation();
   const { envConfig } = useEnv();
   const { settings } = useSettingsStore();
+  const readingStats = getBookReadingStats(book);
 
   const toggleSeriesCollapse = () => {
     saveSysSettings(envConfig, 'metadataSeriesCollapsed', !settings.metadataSeriesCollapsed);
@@ -220,6 +222,12 @@ const BookDetailView: React.FC<BookDetailViewProps> = ({
                   <span className='font-bold'>{_('Identifier')}</span>
                   <p className='text-neutral-content line-clamp-1 text-sm'>
                     {metadata?.identifier || _('Unknown')}
+                  </p>
+                </div>
+                <div className='overflow-hidden'>
+                  <span className='font-bold'>{_('Reading Time')}</span>
+                  <p className='text-neutral-content text-sm'>
+                    {formatReadingDuration(readingStats.readingTimeMs)}
                   </p>
                 </div>
               </div>

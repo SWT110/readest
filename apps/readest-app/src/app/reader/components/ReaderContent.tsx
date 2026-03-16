@@ -9,6 +9,7 @@ import { useSettingsStore } from '@/store/settingsStore';
 import { useBookDataStore } from '@/store/bookDataStore';
 import { useReaderStore } from '@/store/readerStore';
 import { useSidebarStore } from '@/store/sidebarStore';
+import { useLibraryStore } from '@/store/libraryStore';
 import { useGamepad } from '@/hooks/useGamepad';
 import { useTranslation } from '@/hooks/useTranslation';
 import { SystemSettings } from '@/types/settings';
@@ -24,6 +25,7 @@ import { navigateToLibrary } from '@/utils/nav';
 import { clearDiscordPresence } from '@/utils/discord';
 import { BOOK_IDS_SEPARATOR } from '@/services/constants';
 import { BookDetailModal } from '@/components/metadata';
+import { getBookReadingStats, mergeBookReadingStats } from '@/utils/readingStats';
 
 import useBooksManager from '../hooks/useBooksManager';
 import useBookShortcuts from '../hooks/useBookShortcuts';
@@ -47,6 +49,7 @@ const ReaderContent: React.FC<{ ids?: string; settings: SystemSettings }> = ({ i
   const { isSettingsDialogOpen, settingsDialogBookKey } = useSettingsStore();
   const [showDetailsBook, setShowDetailsBook] = useState<Book | null>(null);
   const isInitiating = useRef(false);
+  const readingSessionStartRef = useRef<Record<string, number>>({});
   const [loading, setLoading] = useState(false);
   const [errorLoading, setErrorLoading] = useState(false);
 
@@ -98,6 +101,21 @@ const ReaderContent: React.FC<{ ids?: string; settings: SystemSettings }> = ({ i
   }, []);
 
   useEffect(() => {
+    const now = Date.now();
+    const openKeys = new Set(bookKeys);
+    bookKeys.forEach((key) => {
+      if (!readingSessionStartRef.current[key]) {
+        readingSessionStartRef.current[key] = now;
+      }
+    });
+    Object.keys(readingSessionStartRef.current).forEach((key) => {
+      if (!openKeys.has(key)) {
+        delete readingSessionStartRef.current[key];
+      }
+    });
+  }, [bookKeys]);
+
+  useEffect(() => {
     if (bookKeys && bookKeys.length > 0) {
       const settings = useSettingsStore.getState().settings;
       const lastOpenBooks = bookKeys.map((key) => key.split('-')[0]!);
@@ -137,6 +155,36 @@ const ReaderContent: React.FC<{ ids?: string; settings: SystemSettings }> = ({ i
     }
   };
 
+  const accumulateReadingTime = async (bookKey: string) => {
+    if (!appService) return;
+    const viewState = getViewState(bookKey);
+    if (!viewState?.isPrimary) return;
+
+    const now = Date.now();
+    const startedAt = readingSessionStartRef.current[bookKey] || now;
+    delete readingSessionStartRef.current[bookKey];
+    const elapsedMs = Math.max(0, now - startedAt);
+    if (elapsedMs < 1000) return;
+
+    const id = bookKey.split('-')[0]!;
+    const { library, setLibrary } = useLibraryStore.getState();
+    const index = library.findIndex((item) => item.hash === id);
+    if (index < 0) return;
+
+    const current = library[index]!;
+    const stats = getBookReadingStats(current);
+    const updatedBook = {
+      ...mergeBookReadingStats(current, {
+        readingTimeMs: stats.readingTimeMs + elapsedMs,
+      }),
+      updatedAt: Date.now(),
+    };
+    const updatedLibrary = [...library];
+    updatedLibrary[index] = updatedBook;
+    setLibrary(updatedLibrary);
+    await appService.saveLibraryBooks(updatedLibrary);
+  };
+
   const saveConfigAndCloseBook = async (bookKey: string) => {
     console.log('Closing book', bookKey);
 
@@ -152,6 +200,7 @@ const ReaderContent: React.FC<{ ids?: string; settings: SystemSettings }> = ({ i
       console.info('Error closing book', bookKey);
     }
     eventDispatcher.dispatch('tts-stop', { bookKey });
+    await accumulateReadingTime(bookKey);
     await saveBookConfig(bookKey);
     clearViewState(bookKey);
   };
@@ -167,7 +216,9 @@ const ReaderContent: React.FC<{ ids?: string; settings: SystemSettings }> = ({ i
 
   const handleCloseBooks = throttle(async () => {
     const settings = useSettingsStore.getState().settings;
-    await Promise.all(bookKeys.map(async (key) => await saveConfigAndCloseBook(key)));
+    for (const key of bookKeys) {
+      await saveConfigAndCloseBook(key);
+    }
     await saveSettings(envConfig, settings);
   }, 200);
 
@@ -186,7 +237,7 @@ const ReaderContent: React.FC<{ ids?: string; settings: SystemSettings }> = ({ i
   };
 
   const handleCloseBook = async (bookKey: string) => {
-    saveConfigAndCloseBook(bookKey);
+    await saveConfigAndCloseBook(bookKey);
     if (sideBarBookKey === bookKey) {
       setSideBarBookKey(getNextBookKey(sideBarBookKey));
     }

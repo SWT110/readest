@@ -9,6 +9,7 @@ import { saveViewSettings } from '@/helpers/settings';
 import { getTranslators } from '@/services/translators';
 import { useResetViewSettings } from '@/hooks/useResetSettings';
 import { TRANSLATED_LANGS, TRANSLATOR_LANGS } from '@/services/constants';
+import { SILICONFLOW_TRANSLATION_MODELS } from '@/services/translators/providers/siliconflow';
 import { ConvertChineseVariant } from '@/types/book';
 import { SettingsPanelPanelProp } from './SettingsDialog';
 import { getDirFromLanguage } from '@/utils/rtl';
@@ -27,7 +28,13 @@ const LangPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
   const [uiLanguage, setUILanguage] = useState(viewSettings.uiLanguage);
   const [translationEnabled, setTranslationEnabled] = useState(viewSettings.translationEnabled);
   const [translationProvider, setTranslationProvider] = useState(viewSettings.translationProvider);
+  const [translationModel, setTranslationModel] = useState(viewSettings.translationModel);
   const [translateTargetLang, setTranslateTargetLang] = useState(viewSettings.translateTargetLang);
+  const [dictionaryServerUrl, setDictionaryServerUrl] = useState(viewSettings.dictionaryServerUrl);
+  const [dictionaryName, setDictionaryName] = useState(viewSettings.dictionaryName);
+  const [availableDictionaries, setAvailableDictionaries] = useState<
+    { value: string; label: string }[]
+  >([]);
   const [showTranslateSource, setShowTranslateSource] = useState(viewSettings.showTranslateSource);
   const [ttsReadAloudText, setTtsReadAloudText] = useState(viewSettings.ttsReadAloudText);
   const [replaceQuotationMarks, setReplaceQuotationMarks] = useState(
@@ -44,7 +51,10 @@ const LangPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
       uiLanguage: setUILanguage,
       translationEnabled: setTranslationEnabled,
       translationProvider: setTranslationProvider,
+      translationModel: setTranslationModel,
       translateTargetLang: setTranslateTargetLang,
+      dictionaryServerUrl: setDictionaryServerUrl,
+      dictionaryName: setDictionaryName,
       showTranslateSource: setShowTranslateSource,
       ttsReadAloudText: setTtsReadAloudText,
       replaceQuotationMarks: setReplaceQuotationMarks,
@@ -126,6 +136,54 @@ const LangPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
     viewSettings.translateTargetLang = option;
     setViewSettings(bookKey, { ...viewSettings });
   };
+
+  const handleSelectTranslationModel = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const option = event.target.value;
+    setTranslationModel(option);
+    saveViewSettings(envConfig, bookKey, 'translationModel', option, false, false);
+    viewSettings.translationModel = option;
+    setViewSettings(bookKey, { ...viewSettings });
+  };
+
+  const handleDictionaryServerUrlBlur = () => {
+    const raw = dictionaryServerUrl.trim();
+    const normalized = raw ? (/^https?:\/\//i.test(raw) ? raw : `http://${raw}`) : '';
+    setDictionaryServerUrl(normalized);
+    saveViewSettings(envConfig, bookKey, 'dictionaryServerUrl', normalized, false, false);
+    viewSettings.dictionaryServerUrl = normalized;
+    setViewSettings(bookKey, { ...viewSettings });
+  };
+
+  const handleSelectDictionary = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const option = event.target.value;
+    setDictionaryName(option);
+    saveViewSettings(envConfig, bookKey, 'dictionaryName', option, false, false);
+    viewSettings.dictionaryName = option;
+    setViewSettings(bookKey, { ...viewSettings });
+  };
+
+  useEffect(() => {
+    const raw = dictionaryServerUrl.trim();
+    const normalized = raw ? (/^https?:\/\//i.test(raw) ? raw : `http://${raw}`) : '';
+    const baseUrl = normalized.replace(/\/+$/, '');
+    const url = baseUrl
+      ? `${baseUrl}/api/dictionaries/list`
+      : `${window.location.origin}/api/dictionaries/list`;
+
+    fetch(url)
+      .then(async (response) => {
+        if (!response.ok) throw new Error('Failed to list dictionaries');
+        const data = await response.json();
+        const options = (data.dictionaries || []).map((item: { name: string }) => ({
+          value: item.name,
+          label: item.name,
+        }));
+        setAvailableDictionaries(options);
+      })
+      .catch(() => {
+        setAvailableDictionaries([]);
+      });
+  }, [dictionaryServerUrl]);
 
   const handleSelectTTSText = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const option = event.target.value;
@@ -305,12 +363,62 @@ const LangPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
               />
             </div>
 
+            {translationProvider === 'siliconflow' && (
+              <div className='config-item' data-setting-id='settings.language.translationModel'>
+                <span className=''>{_('Translation Model')}</span>
+                <Select
+                  value={translationModel}
+                  onChange={handleSelectTranslationModel}
+                  options={SILICONFLOW_TRANSLATION_MODELS.map((model) => ({
+                    value: model.value,
+                    label: model.label,
+                  }))}
+                />
+              </div>
+            )}
+
             <div className='config-item' data-setting-id='settings.language.targetLanguage'>
               <span className=''>{_('Translate To')}</span>
               <Select
                 value={getCurrentTargetLangOption().value}
                 onChange={handleSelectTargetLang}
                 options={getLangOptions(TRANSLATOR_LANGS)}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className='w-full' data-setting-id='settings.language.dictionary'>
+        <h2 className='mb-2 font-medium'>{_('Dictionary')}</h2>
+        <div className='card border-base-200 bg-base-100 border shadow'>
+          <div className='divide-base-200 divide-y'>
+            <div className='config-item !h-auto items-start py-3'>
+              <div className='flex flex-col gap-1 pr-3'>
+                <span>{_('Dictionary Server URL')}</span>
+                <span className='text-xs opacity-70'>
+                  {_('Leave empty to use the current Readest server.')}
+                </span>
+              </div>
+              <input
+                type='text'
+                className='input input-bordered w-64 max-w-full'
+                value={dictionaryServerUrl}
+                onChange={(event) => setDictionaryServerUrl(event.target.value)}
+                onBlur={handleDictionaryServerUrlBlur}
+                placeholder='http://154.36.154.230:3000'
+              />
+            </div>
+
+            <div className='config-item'>
+              <span>{_('Dictionary')}</span>
+              <Select
+                value={dictionaryName}
+                onChange={handleSelectDictionary}
+                options={[
+                  { value: '', label: _('None') },
+                  ...availableDictionaries,
+                ]}
               />
             </div>
           </div>

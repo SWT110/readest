@@ -3,10 +3,12 @@ import Popup from '@/components/Popup';
 import { Position } from '@/utils/sel';
 import { useAuth } from '@/context/AuthContext';
 import { useSettingsStore } from '@/store/settingsStore';
+import { useReaderStore } from '@/store/readerStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useTranslator } from '@/hooks/useTranslator';
 import { TRANSLATOR_LANGS } from '@/services/constants';
 import { UseTranslatorOptions, getTranslators } from '@/services/translators';
+import { SILICONFLOW_TRANSLATION_MODELS } from '@/services/translators/providers/siliconflow';
 import Select from '@/components/Select';
 
 const notSupportedLangs = [''];
@@ -20,6 +22,7 @@ const generateTranslatorLangs = () => {
 const translatorLangs = generateTranslatorLangs();
 
 interface TranslatorPopupProps {
+  bookKey: string;
   text: string;
   position: Position;
   trianglePosition: Position;
@@ -34,6 +37,7 @@ interface TranslatorType {
 }
 
 const TranslatorPopup: React.FC<TranslatorPopupProps> = ({
+  bookKey,
   text,
   position,
   trianglePosition,
@@ -44,10 +48,19 @@ const TranslatorPopup: React.FC<TranslatorPopupProps> = ({
   const _ = useTranslation();
   const { token } = useAuth();
   const { settings, setSettings } = useSettingsStore();
+  const { getViewSettings } = useReaderStore();
+  const viewSettings = getViewSettings(bookKey);
   const [providers, setProviders] = useState<TranslatorType[]>([]);
   const [sourceLang, setSourceLang] = useState('AUTO');
-  const [targetLang, setTargetLang] = useState(settings.globalReadSettings.translateTargetLang);
-  const [provider, setProvider] = useState(settings.globalReadSettings.translationProvider);
+  const [targetLang, setTargetLang] = useState(
+    viewSettings?.translateTargetLang || settings.globalReadSettings.translateTargetLang,
+  );
+  const [provider, setProvider] = useState(
+    viewSettings?.translationProvider || settings.globalReadSettings.translationProvider,
+  );
+  const [model, setModel] = useState(
+    viewSettings?.translationModel || settings.globalReadSettings.translationModel,
+  );
   const [translation, setTranslation] = useState<string | null>(null);
   const [detectedSourceLang, setDetectedSourceLang] = useState<string | null>(null);
 
@@ -57,6 +70,7 @@ const TranslatorPopup: React.FC<TranslatorPopupProps> = ({
     provider,
     sourceLang,
     targetLang,
+    model,
   } as UseTranslatorOptions);
 
   const handleSourceLangChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -81,6 +95,12 @@ const TranslatorPopup: React.FC<TranslatorPopupProps> = ({
       setSettings(settings);
       setProvider(selectedTranslator.name);
     }
+  };
+
+  const handleModelChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    settings.globalReadSettings.translationModel = event.target.value;
+    setSettings(settings);
+    setModel(event.target.value);
   };
 
   useEffect(() => {
@@ -119,7 +139,8 @@ const TranslatorPopup: React.FC<TranslatorPopupProps> = ({
         }
       } catch (err) {
         console.error(err);
-        if (!token) {
+        const selectedTranslator = translators.find((item) => item.name === provider);
+        if (selectedTranslator?.authRequired && !token) {
           setError(_('Unable to fetch the translation. Please log in first and try again.'));
         } else {
           setError(_('Unable to fetch the translation. Try again later.'));
@@ -133,6 +154,8 @@ const TranslatorPopup: React.FC<TranslatorPopupProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [text, token, sourceLang, targetLang, provider, translate]);
 
+  const selectedProviderLabel = providers.find((item) => item.name === provider)?.label || provider;
+
   return (
     <div>
       <Popup
@@ -141,81 +164,95 @@ const TranslatorPopup: React.FC<TranslatorPopupProps> = ({
         minHeight={popupHeight}
         maxHeight={720}
         position={position}
-        className='not-eink:text-white grid h-full select-text grid-rows-[1fr,auto,1fr] bg-gray-600'
+        className='not-eink:text-white flex h-full select-text flex-col bg-gray-600'
         triangleClassName='text-gray-600'
         onDismiss={onDismiss}
       >
-        <div className='overflow-y-auto p-4 font-sans'>
-          <div className='mb-2 flex items-center justify-between'>
-            <h1 className='text-sm font-normal'>{_('Original Text')}</h1>
+        <div className='border-gray-500/30 flex items-center justify-between gap-2 border-b px-4 py-2'>
+          <div className='line-clamp-1 text-xs opacity-75'>{selectedProviderLabel}</div>
+          <div className='flex flex-wrap items-center justify-end gap-2'>
+            {provider === 'siliconflow' && (
+              <Select
+                className='not-eink:bg-gray-600 not-eink:text-white eink:bg-base-100'
+                value={model}
+                onChange={handleModelChange}
+                options={SILICONFLOW_TRANSLATION_MODELS.map((item) => ({
+                  value: item.value,
+                  label: item.label,
+                }))}
+              />
+            )}
             <Select
               className='not-eink:bg-gray-600 not-eink:text-white eink:bg-base-100'
-              value={sourceLang}
-              onChange={handleSourceLangChange}
-              options={[
-                { value: 'AUTO', label: _('Auto Detect') },
-                ...Object.entries(translatorLangs)
-                  .sort((a, b) => a[1].localeCompare(b[1]))
-                  .map(([code, name]) => {
-                    const label =
-                      detectedSourceLang && sourceLang === 'AUTO' && code === 'AUTO'
-                        ? `${translatorLangs[detectedSourceLang] || detectedSourceLang} ` +
-                          _('(detected)')
-                        : name;
-                    return { value: code, label };
-                  }),
-              ]}
+              value={provider}
+              onChange={handleProviderChange}
+              options={providers.map(({ name: value, label }) => ({ value, label }))}
             />
           </div>
-          <p className='not-eink:text-white/90 text-base'>{text}</p>
         </div>
 
-        <div className='mx-4 flex-shrink-0 border-t border-gray-500/30'></div>
-
-        <div className='overflow-y-auto px-4 pb-8 pt-4 font-sans'>
-          <div className='mb-2 flex items-center justify-between'>
-            <h2 className='text-sm font-normal'>{_('Translated Text')}</h2>
-            <Select
-              className='not-eink:bg-gray-600 not-eink:text-white eink:bg-base-100'
-              value={targetLang}
-              onChange={handleTargetLangChange}
-              options={[
-                { value: '', label: _('System Language') },
-                ...Object.entries(translatorLangs)
-                  .sort((a, b) => a[1].localeCompare(b[1]))
-                  .map(([code, name]) => ({ value: code, label: name })),
-              ]}
-            />
-          </div>
-          {loading ? (
-            <p className='text-base italic text-gray-500'>{_('Loading...')}</p>
-          ) : (
-            <div>
-              {error ? (
-                <p className='text-base text-red-600'>{error}</p>
-              ) : (
-                <p className='not-eink:text-white/90 text-base'>
-                  {translation || _('No translation available.')}
-                </p>
-              )}
+        <div className='flex min-h-0 flex-1 flex-col'>
+          <div className='min-h-0 flex-1 overflow-y-auto p-4 font-sans'>
+            <div className='mb-2 flex items-center justify-between'>
+              <h1 className='text-sm font-normal'>{_('Original Text')}</h1>
+              <Select
+                className='not-eink:bg-gray-600 not-eink:text-white eink:bg-base-100'
+                value={sourceLang}
+                onChange={handleSourceLangChange}
+                options={[
+                  { value: 'AUTO', label: _('Auto Detect') },
+                  ...Object.entries(translatorLangs)
+                    .sort((a, b) => a[1].localeCompare(b[1]))
+                    .map(([code, name]) => {
+                      const label =
+                        detectedSourceLang && sourceLang === 'AUTO' && code === 'AUTO'
+                          ? `${translatorLangs[detectedSourceLang] || detectedSourceLang} ` +
+                            _('(detected)')
+                          : name;
+                      return { value: code, label };
+                    }),
+                ]}
+              />
             </div>
-          )}
-        </div>
-        <div className='absolute bottom-0 flex h-8 w-full items-center justify-between px-4'>
-          <div className='line-clamp-1 text-xs opacity-60'>
-            {provider &&
-              !loading &&
-              !error &&
-              _('Translated by {{provider}}.', {
-                provider: providers.find((p) => p.name === provider)?.label,
-              })}
+            <p className='not-eink:text-white/90 text-base'>{text}</p>
           </div>
-          <Select
-            className='not-eink:bg-gray-600 not-eink:text-white eink:bg-base-100'
-            value={provider}
-            onChange={handleProviderChange}
-            options={providers.map(({ name: value, label }) => ({ value, label }))}
-          />
+
+          <div className='mx-4 flex-shrink-0 border-t border-gray-500/30'></div>
+
+          <div className='min-h-0 flex-1 overflow-y-auto px-4 pb-4 pt-4 font-sans'>
+            <div className='mb-2 flex items-center justify-between'>
+              <h2 className='text-sm font-normal'>{_('Translated Text')}</h2>
+              <Select
+                className='not-eink:bg-gray-600 not-eink:text-white eink:bg-base-100'
+                value={targetLang}
+                onChange={handleTargetLangChange}
+                options={[
+                  { value: '', label: _('System Language') },
+                  ...Object.entries(translatorLangs)
+                    .sort((a, b) => a[1].localeCompare(b[1]))
+                    .map(([code, name]) => ({ value: code, label: name })),
+                ]}
+              />
+            </div>
+            {loading ? (
+              <p className='text-base italic text-gray-500'>{_('Loading...')}</p>
+            ) : (
+              <div>
+                {error ? (
+                  <p className='text-base text-red-600'>{error}</p>
+                ) : (
+                  <p className='not-eink:text-white/90 text-base'>
+                    {translation || _('No translation available.')}
+                  </p>
+                )}
+              </div>
+            )}
+            {provider && !loading && !error && (
+              <div className='mt-2 line-clamp-1 text-xs opacity-60'>
+                {_('Translated by {{provider}}.', { provider: selectedProviderLabel })}
+              </div>
+            )}
+          </div>
         </div>
       </Popup>
     </div>

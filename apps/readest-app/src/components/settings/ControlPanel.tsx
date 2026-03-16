@@ -35,6 +35,10 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
     viewSettings.showPaginationButtons,
   );
   const [isDisableClick, setIsDisableClick] = useState(viewSettings.disableClick);
+  const [tapWordLookup, setTapWordLookup] = useState(viewSettings.tapWordLookup ?? true);
+  const [tapWordAutoPronounce, setTapWordAutoPronounce] = useState(
+    viewSettings.tapWordAutoPronounce ?? true,
+  );
   const [fullscreenClickArea, setFullscreenClickArea] = useState(viewSettings.fullscreenClickArea);
   const [swapClickArea, setSwapClickArea] = useState(viewSettings.swapClickArea);
   const [isDisableDoubleClick, setIsDisableDoubleClick] = useState(viewSettings.disableDoubleClick);
@@ -62,6 +66,8 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
       volumeKeysToFlip: setVolumeKeysToFlip,
       showPaginationButtons: setShowPaginationButtons,
       disableClick: setIsDisableClick,
+      tapWordLookup: setTapWordLookup,
+      tapWordAutoPronounce: setTapWordAutoPronounce,
       swapClickArea: setSwapClickArea,
       animated: setAnimated,
       isEink: setIsEink,
@@ -134,6 +140,31 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
     saveViewSettings(envConfig, bookKey, 'disableClick', isDisableClick, false, false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isDisableClick]);
+
+  useEffect(() => {
+    saveViewSettings(envConfig, bookKey, 'tapWordLookup', tapWordLookup, false, false);
+    if (tapWordLookup) {
+      if (!isDisableClick) {
+        setIsDisableClick(true);
+      }
+      if (!showPaginationButtons) {
+        setShowPaginationButtons(true);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tapWordLookup]);
+
+  useEffect(() => {
+    saveViewSettings(
+      envConfig,
+      bookKey,
+      'tapWordAutoPronounce',
+      tapWordAutoPronounce,
+      false,
+      false,
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tapWordAutoPronounce]);
 
   useEffect(() => {
     saveViewSettings(envConfig, bookKey, 'disableDoubleClick', isDisableDoubleClick, false, false);
@@ -288,7 +319,47 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
                 type='checkbox'
                 className='toggle'
                 checked={!isDisableClick}
+                disabled={tapWordLookup}
                 onChange={() => setIsDisableClick(!isDisableClick)}
+              />
+            </div>
+            <div className='config-item' data-setting-id='settings.control.tapWordLookup'>
+              <div className='flex flex-col gap-1'>
+                <span className=''>
+                  {appService?.isMobileApp
+                    ? _('Tap Word to Lookup Dictionary')
+                    : _('Click Word to Lookup Dictionary')}
+                </span>
+                <span className='text-xs opacity-70'>
+                  {_(
+                    'Enable this to avoid click-to-page conflicts. Page buttons will be forced on.',
+                  )}
+                </span>
+              </div>
+              <input
+                type='checkbox'
+                className='toggle'
+                checked={tapWordLookup}
+                onChange={() => setTapWordLookup(!tapWordLookup)}
+              />
+            </div>
+            <div className='config-item' data-setting-id='settings.control.tapWordAutoPronounce'>
+              <div className='flex flex-col gap-1'>
+                <span className=''>
+                  {appService?.isMobileApp
+                    ? _('Auto Pronounce After Tap Lookup')
+                    : _('Auto Pronounce After Click Lookup')}
+                </span>
+                <span className='text-xs opacity-70'>
+                  {_('Automatically play pronunciation when a word is opened from tap lookup.')}
+                </span>
+              </div>
+              <input
+                type='checkbox'
+                className='toggle'
+                checked={tapWordAutoPronounce}
+                disabled={!tapWordLookup}
+                onChange={() => setTapWordAutoPronounce(!tapWordAutoPronounce)}
               />
             </div>
             <div className='config-item' data-setting-id='settings.control.clickBothSides'>
@@ -299,7 +370,7 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
                 type='checkbox'
                 className='toggle'
                 checked={fullscreenClickArea}
-                disabled={isDisableClick}
+                disabled={isDisableClick || tapWordLookup}
                 onChange={() => setFullscreenClickArea(!fullscreenClickArea)}
               />
             </div>
@@ -311,7 +382,7 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
                 type='checkbox'
                 className='toggle'
                 checked={swapClickArea}
-                disabled={isDisableClick || fullscreenClickArea}
+                disabled={isDisableClick || fullscreenClickArea || tapWordLookup}
                 onChange={() => setSwapClickArea(!swapClickArea)}
               />
             </div>
@@ -343,6 +414,7 @@ const ControlPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterRes
                 type='checkbox'
                 className='toggle'
                 checked={showPaginationButtons}
+                disabled={tapWordLookup}
                 onChange={() => setShowPaginationButtons(!showPaginationButtons)}
               />
             </div>
